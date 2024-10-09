@@ -1,0 +1,8 @@
+[general]
+name=DroneML
+qgisMinimumVersion=3.3
+description=This is a plugin for Drone Machine Learning study.
+version=0.1
+author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
+email=m.dekleijn@esciencecenter.nl
+category=Analysis

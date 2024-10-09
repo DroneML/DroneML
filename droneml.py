@@ -1,5 +1,6 @@
 import os
 import inspect
+from .droneml_dialog import DroneMLDialog
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 
@@ -20,4 +21,6 @@ class DroneMLPlugin:
         del self.action
         
     def run(self):
-        self.iface.messageBar().pushMessage('Hello from Plugin')
+        # self.iface.messageBar().pushMessage('Hello from Plugin')
+        self.dlg = DroneMLDialog()
+        self.dlg.show()

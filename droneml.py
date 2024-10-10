@@ -12,7 +12,7 @@ class DroneMLPlugin:
 
     def initGui(self):
         icon = os.path.join(os.path.join(cmd_folder, 'icon.png'))
-        self.action = QAction(QIcon(icon), 'Load Basemap', self.iface.mainWindow())
+        self.action = QAction(QIcon(icon), 'DroneML', self.iface.mainWindow())
         self.iface.addToolBarIcon(self.action)
         self.action.triggered.connect(self.run)
       

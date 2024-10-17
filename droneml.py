@@ -4,6 +4,7 @@ from .droneml_dialog import DroneMLDialog
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 
+
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
 class DroneMLPlugin:
@@ -15,12 +16,20 @@ class DroneMLPlugin:
         self.action = QAction(QIcon(icon), 'DroneML', self.iface.mainWindow())
         self.iface.addToolBarIcon(self.action)
         self.action.triggered.connect(self.run)
-      
+
     def unload(self):
         self.iface.removeToolBarIcon(self.action)
         del self.action
-        
+
     def run(self):
-        # self.iface.messageBar().pushMessage('Hello from Plugin')
+        # Instantiate the dialog
         self.dlg = DroneMLDialog()
+
+        # Get the current layers and pass them to the map canvas
+        layers = self.iface.mapCanvas().layers()
+        if layers:
+            self.dlg.canvas.setLayers(layers)
+            self.dlg.canvas.zoomToFullExtent()
+
+        # Show the dialog
         self.dlg.show()

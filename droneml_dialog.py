@@ -13,7 +13,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         super(DroneMLDialog, self).__init__(parent)
 
         # Set up the dialog window properties
-        self.setWindowTitle("DroneML 2 Plugin")
+        self.setWindowTitle("DroneML Plugin")
         self.resize(800, 600)
 
         # Create a layout to organize widgets in the dialog
@@ -71,11 +71,13 @@ class DroneMLDialog(QtWidgets.QDialog):
                 return
 
             # Add the raster layer to the current project
-            QgsProject.instance().addMapLayer(raster_layer)
+            # QgsProject.instance().addMapLayer(raster_layer)
+            # self.canvas.addLayer(raster_layer)
 
             # Set the canvas to show the raster layer
+            # self.canvas.setTheme('')
             self.canvas.setLayers([raster_layer])
 
             # Zoom to the full extent of the raster layer
             self.canvas.setExtent(raster_layer.extent())
-            self.canvas.refresh()
+            self.canvas.refresh()      

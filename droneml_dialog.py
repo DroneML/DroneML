@@ -1,10 +1,5 @@
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt import QtCore
-from qgis.PyQt.QtGui import QIcon
-from qgis.gui import QgsMapCanvas
-from qgis.core import QgsRasterLayer, QgsProject, QgsMapSettings
-import os
+from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 
 
 class DroneMLDialog(QtWidgets.QDialog):
@@ -16,34 +11,42 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.setWindowTitle("DroneML Plugin")
         self.resize(800, 600)
 
+
         # Create a layout to organize widgets in the dialog
         layout = QtWidgets.QVBoxLayout()
 
-        # Create the QgsMapCanvas and set it up
-        self.canvas = QgsMapCanvas()
-        self.canvas.setCanvasColor(Qt.white)
-        map_settings = QgsMapSettings()
-        self.canvas.setExtent(map_settings.extent())
-        layout.addWidget(self.canvas)
+        # Combo box for raster layers
+        # Label
+        raster_label = QtWidgets.QLabel("Raster layer for training:")
+        raster_label.setGeometry(50, 50, 200, 30)
+        # Combo box
+        layout.addWidget(raster_label)
+        self.raster_combo = QtWidgets.QComboBox()
+        _populate_raster_combo(self.raster_combo)
+        layout.addWidget(self.raster_combo)
+
+        # Combo box for raster layers
+        vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
+        layout.addWidget(vec_positive_label)
+        self.vec_positive = QtWidgets.QComboBox()
+        _populate_vector_combo(self.vec_positive)
+        layout.addWidget(self.vec_positive)
+
+         # Combo box for raster layers
+        vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
+        layout.addWidget(vec_negative_label)
+        self.vec_negative = QtWidgets.QComboBox()
+        _populate_vector_combo(self.vec_negative)
+        layout.addWidget(self.vec_negative)
 
         # Create a horizontal layout for buttons (zoom in/out and load raster)
         button_layout = QtWidgets.QHBoxLayout()
 
-        # Add Zoom In Button
-        zoom_in_button = QtWidgets.QPushButton("Zoom In")
-        zoom_in_button.clicked.connect(self.zoom_in)
-        button_layout.addWidget(zoom_in_button)
-
-        # Add Zoom Out Button
-        zoom_out_button = QtWidgets.QPushButton("Zoom Out")
-        zoom_out_button.clicked.connect(self.zoom_out)
-        button_layout.addWidget(zoom_out_button)
-
         # Add Load Raster Button
-        load_raster_button = QtWidgets.QPushButton("Load Raster")
-        load_raster_button.clicked.connect(self.load_raster)
-        load_raster_button.setFixedSize(32, 32)
-        button_layout.addWidget(load_raster_button)
+        run_button = QtWidgets.QPushButton("run")
+        # run_button.clicked.connect(self.load_raster)
+        run_button.setFixedSize(64, 32)
+        button_layout.addWidget(run_button)
 
         # Add the button layout to the main layout
         layout.addLayout(button_layout)
@@ -51,33 +54,22 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Set the layout to the dialog
         self.setLayout(layout)
 
-    def zoom_in(self):
-        self.canvas.zoomIn()
+def _populate_raster_combo(raster_combo):
+    """Poluate the raster combo box with the loaded raster layers."""
 
-    def zoom_out(self):
-        self.canvas.zoomOut()
+    # Get the list of layers in the current QGIS project
+    layers = QgsProject.instance().mapLayers().values()
+    for layer in layers:
+        if isinstance(layer, QgsRasterLayer):
+            raster_combo.addItem(layer.name())
 
-    def load_raster(self):
-        # Open a file dialog to select a raster file
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open Raster", "", "Raster Files (*.tif *.tiff *.img)")
+def _populate_vector_combo(vector_combo):
+    """Poluate the vector combo box with the loaded vector layers."""
 
-        if file_path:
-            # Load the raster layer
-            raster_layer = QgsRasterLayer(file_path, "Loaded Raster")
+    # Get the list of layers in the current QGIS project
+    layers = QgsProject.instance().mapLayers().values()
+    for layer in layers:
+        if isinstance(layer, QgsVectorLayer):
+            vector_combo.addItem(layer.name())
 
-            # Check if the raster layer is valid
-            if not raster_layer.isValid():
-                QtWidgets.QMessageBox.critical(self, "Error", "Failed to load the raster file.")
-                return
-
-            # Add the raster layer to the current project
-            # QgsProject.instance().addMapLayer(raster_layer)
-            # self.canvas.addLayer(raster_layer)
-
-            # Set the canvas to show the raster layer
-            # self.canvas.setTheme('')
-            self.canvas.setLayers([raster_layer])
-
-            # Zoom to the full extent of the raster layer
-            self.canvas.setExtent(raster_layer.extent())
-            self.canvas.refresh()      
+    

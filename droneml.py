@@ -25,11 +25,11 @@ class DroneMLPlugin:
         # Instantiate the dialog
         self.dlg = DroneMLDialog()
 
-        # Get the current layers and pass them to the map canvas
-        layers = self.iface.mapCanvas().layers()
-        if layers:
-            self.dlg.canvas.setLayers(layers)
-            self.dlg.canvas.zoomToFullExtent()
+        # # Get the current layers and pass them to the map canvas
+        # layers = self.iface.mapCanvas().layers()
+        # if layers:
+        #     self.dlg.canvas.setLayers(layers)
+        #     self.dlg.canvas.zoomToFullExtent()
 
         # Show the dialog
         self.dlg.show()

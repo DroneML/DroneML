@@ -6,3 +6,4 @@ version=0.1
 author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
 email=m.dekleijn@esciencecenter.nl
 category=Analysis
+python_dependencies=geopandas,rioxarray

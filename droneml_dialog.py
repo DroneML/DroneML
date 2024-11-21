@@ -2,7 +2,7 @@ from qgis.PyQt import QtWidgets
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 import shapely
 import geopandas as gpd
-
+import rioxarray
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -71,6 +71,9 @@ class DroneMLDialog(QtWidgets.QDialog):
         print(f"Raster Layer: {raster_layer}")
         print(f"Positive Vector Layer: {vec_positive_layer}")
         print(f"Negative Vector Layer: {vec_negative_layer}")
+
+        ds_raster = rioxarray.open_rasterio(raster_layer.source())
+        print(ds_raster)
 
         # Convert positive vector layer to GeoDataFrame
         positive_vector_gdf = _qgs_vector_layer_to_gdf(vec_positive_layer)

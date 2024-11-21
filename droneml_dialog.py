@@ -4,6 +4,7 @@ import shapely
 import geopandas as gpd
 import rioxarray
 
+FONTSIZE = 16
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -19,31 +20,39 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.qgis_layers = _sort_layers(self.qgis_layers)
 
         # Create a layout to organize widgets in the dialog
-        layout = QtWidgets.QVBoxLayout()
+        self.layout = QtWidgets.QVBoxLayout()
 
         # Combo box for raster layers
         # Label
-        raster_label = QtWidgets.QLabel("Raster layer for training:")
-        raster_label.setGeometry(50, 50, 200, 30)
+        self.raster_label = QtWidgets.QLabel("Raster layer for training:")
+        self.raster_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.raster_label.setFixedSize(600, 15)
         # Combo box
-        layout.addWidget(raster_label)
+        self.layout.addWidget(self.raster_label)
         self.raster_combo = QtWidgets.QComboBox()
+        self.raster_combo.setFixedSize(600, 25)
         self._populate_raster_combo(self.raster_combo)
-        layout.addWidget(self.raster_combo)
+        self.layout.addWidget(self.raster_combo)
 
         # Combo box for raster layers
-        vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
-        layout.addWidget(vec_positive_label)
+        self.vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
+        self.vec_positive_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.vec_positive_label.setFixedSize(600, 15)
+        self.layout.addWidget(self.vec_positive_label)
         self.vec_positive_combo = QtWidgets.QComboBox()
+        self.vec_positive_combo.setFixedSize(600, 25)
         self._populate_vector_combo(self.vec_positive_combo)
-        layout.addWidget(self.vec_positive_combo)
+        self.layout.addWidget(self.vec_positive_combo)
 
         # Combo box for raster layers
-        vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
-        layout.addWidget(vec_negative_label)
+        self.vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
+        self.vec_negative_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.vec_negative_label.setFixedSize(600, 15)
+        self.layout.addWidget(self.vec_negative_label)
         self.vec_negative_combo = QtWidgets.QComboBox()
+        self.vec_negative_combo.setFixedSize(600, 25)
         self._populate_vector_combo(self.vec_negative_combo)
-        layout.addWidget(self.vec_negative_combo)
+        self.layout.addWidget(self.vec_negative_combo)
 
         # Create a horizontal layout for buttons (zoom in/out and load raster)
         button_layout = QtWidgets.QHBoxLayout()
@@ -55,10 +64,11 @@ class DroneMLDialog(QtWidgets.QDialog):
         button_layout.addWidget(run_button)
 
         # Add the button layout to the main layout
-        layout.addLayout(button_layout)
+        self.layout.addLayout(button_layout)
 
         # Set the layout to the dialog
-        self.setLayout(layout)
+        self.layout.setSpacing(0)
+        self.setLayout(self.layout)
 
     def run_classification(self):
         """Run the classification algorithm."""
@@ -106,8 +116,8 @@ class DroneMLDialog(QtWidgets.QDialog):
                 combo_box.addItem(layer.name())
 
 
-# Convert QgsVectorLayer to GeoPandas DataFrame
 def _qgs_vector_layer_to_gdf(qgs_layer):
+    """Convert QgsVectorLayer to GeoPandas DataFrame"""
     features = [f for f in qgs_layer.getFeatures()]
     geometries = [shapely.from_wkt(f.geometry().asWkt()) for f in features]
     attributes = [f.attributes() for f in features]

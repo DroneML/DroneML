@@ -4,6 +4,7 @@ import shapely
 import geopandas as gpd
 import rioxarray
 
+
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor."""
@@ -12,6 +13,10 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
         self.resize(800, 600)
+
+        # Get Qgis Layers
+        self.qgis_layers = QgsProject.instance().mapLayers().values()
+        self.qgis_layers = _sort_layers(self.qgis_layers)
 
         # Create a layout to organize widgets in the dialog
         layout = QtWidgets.QVBoxLayout()
@@ -23,21 +28,21 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Combo box
         layout.addWidget(raster_label)
         self.raster_combo = QtWidgets.QComboBox()
-        _populate_raster_combo(self.raster_combo)
+        self._populate_raster_combo(self.raster_combo)
         layout.addWidget(self.raster_combo)
 
         # Combo box for raster layers
         vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
         layout.addWidget(vec_positive_label)
         self.vec_positive_combo = QtWidgets.QComboBox()
-        _populate_vector_combo(self.vec_positive_combo)
+        self._populate_vector_combo(self.vec_positive_combo)
         layout.addWidget(self.vec_positive_combo)
 
         # Combo box for raster layers
         vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
         layout.addWidget(vec_negative_label)
         self.vec_negative_combo = QtWidgets.QComboBox()
-        _populate_vector_combo(self.vec_negative_combo)
+        self._populate_vector_combo(self.vec_negative_combo)
         layout.addWidget(self.vec_negative_combo)
 
         # Create a horizontal layout for buttons (zoom in/out and load raster)
@@ -58,6 +63,7 @@ class DroneMLDialog(QtWidgets.QDialog):
     def run_classification(self):
         """Run the classification algorithm."""
 
+        # Get current selections
         raster_layer = QgsProject.instance().mapLayersByName(
             self.raster_combo.currentText()
         )[0]
@@ -83,25 +89,21 @@ class DroneMLDialog(QtWidgets.QDialog):
         negative_vector_gdf = _qgs_vector_layer_to_gdf(vec_negative_layer)
         print(negative_vector_gdf)
 
+    def _populate_raster_combo(self, combo_box):
+        """Poluate the raster combo box with the loaded raster layers."""
 
-def _populate_raster_combo(raster_combo):
-    """Poluate the raster combo box with the loaded raster layers."""
+        # Get the list of layers in the current QGIS project
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsRasterLayer):
+                self.raster_combo.addItem(layer.name())
 
-    # Get the list of layers in the current QGIS project
-    layers = QgsProject.instance().mapLayers().values()
-    for layer in layers:
-        if isinstance(layer, QgsRasterLayer):
-            raster_combo.addItem(layer.name())
+    def _populate_vector_combo(self, combo_box):
+        """Poluate the vector combo box with the loaded vector layers."""
 
-
-def _populate_vector_combo(vector_combo):
-    """Poluate the vector combo box with the loaded vector layers."""
-
-    # Get the list of layers in the current QGIS project
-    layers = QgsProject.instance().mapLayers().values()
-    for layer in layers:
-        if isinstance(layer, QgsVectorLayer):
-            vector_combo.addItem(layer.name())
+        # Get the list of layers in the current QGIS project
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsVectorLayer):
+                combo_box.addItem(layer.name())
 
 
 # Convert QgsVectorLayer to GeoPandas DataFrame
@@ -112,3 +114,21 @@ def _qgs_vector_layer_to_gdf(qgs_layer):
     field_names = [field.name() for field in qgs_layer.fields()]
     gdf = gpd.GeoDataFrame(attributes, columns=field_names, geometry=geometries)
     return gdf
+
+
+def _sort_layers(layers):
+    """Get all layers sorted by active layers first."""
+    layer_tree_root = QgsProject.instance().layerTreeRoot()
+
+    # Separate active and inactive layers
+    active_layers = []
+    inactive_layers = []
+    for layer in layers:
+        if layer_tree_root.findLayer(layer.id()).isVisible():
+            active_layers.append(layer)
+        else:
+            inactive_layers.append(layer)
+
+    # Combine active layers first, then inactive layers
+    sorted_layers = active_layers + inactive_layers
+    return sorted_layers

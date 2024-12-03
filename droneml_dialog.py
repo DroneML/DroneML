@@ -27,14 +27,14 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.raster_label = QtWidgets.QLabel("Raster layer for training:")
         self.raster_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.raster_label.setFixedSize(600, 15)
-        # Combo box
         self.layout.addWidget(self.raster_label)
+        # Combo box
         self.raster_combo = QtWidgets.QComboBox()
         self.raster_combo.setFixedSize(600, 25)
         self._populate_raster_combo(self.raster_combo)
         self.layout.addWidget(self.raster_combo)
 
-        # Combo box for raster layers
+        # Combo box for positive label layers
         self.vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
         self.vec_positive_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.vec_positive_label.setFixedSize(600, 15)
@@ -44,7 +44,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self._populate_vector_combo(self.vec_positive_combo)
         self.layout.addWidget(self.vec_positive_combo)
 
-        # Combo box for raster layers
+        # Combo box for negative label layers
         self.vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
         self.vec_negative_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.vec_negative_label.setFixedSize(600, 15)
@@ -57,7 +57,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Create a horizontal layout for buttons (zoom in/out and load raster)
         button_layout = QtWidgets.QHBoxLayout()
 
-        # Add Load Raster Button
+        # Add run button
         run_button = QtWidgets.QPushButton("run")
         run_button.clicked.connect(self.run_classification)
         run_button.setFixedSize(64, 32)
@@ -100,7 +100,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         print(negative_vector_gdf)
 
     def _populate_raster_combo(self, combo_box):
-        """Poluate the raster combo box with the loaded raster layers."""
+        """Populate the raster combo box with the loaded raster layers."""
 
         # Get the list of layers in the current QGIS project
         for layer in self.qgis_layers:

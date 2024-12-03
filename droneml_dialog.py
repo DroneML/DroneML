@@ -1,11 +1,10 @@
 from qgis.PyQt import QtWidgets
-from qgis.PyQt.QtCore import Qt
-from qgis.PyQt import QtCore
-from qgis.PyQt.QtGui import QIcon
-from qgis.gui import QgsMapCanvas
-from qgis.core import QgsRasterLayer, QgsProject, QgsMapSettings
-import os
+from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
+import shapely
+import geopandas as gpd
+import rioxarray
 
+FONTSIZE = 16
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -13,69 +12,133 @@ class DroneMLDialog(QtWidgets.QDialog):
         super(DroneMLDialog, self).__init__(parent)
 
         # Set up the dialog window properties
-        self.setWindowTitle("DroneML 2 Plugin")
+        self.setWindowTitle("DroneML Plugin")
         self.resize(800, 600)
 
-        # Create a layout to organize widgets in the dialog
-        layout = QtWidgets.QVBoxLayout()
+        # Get Qgis Layers
+        self.qgis_layers = QgsProject.instance().mapLayers().values()
+        self.qgis_layers = _sort_layers(self.qgis_layers)
 
-        # Create the QgsMapCanvas and set it up
-        self.canvas = QgsMapCanvas()
-        self.canvas.setCanvasColor(Qt.white)
-        map_settings = QgsMapSettings()
-        self.canvas.setExtent(map_settings.extent())
-        layout.addWidget(self.canvas)
+        # Create a layout to organize widgets in the dialog
+        self.layout = QtWidgets.QVBoxLayout()
+
+        # Combo box for raster layers
+        # Label
+        self.raster_label = QtWidgets.QLabel("Raster layer for training:")
+        self.raster_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.raster_label.setFixedSize(600, 15)
+        self.layout.addWidget(self.raster_label)
+        # Combo box
+        self.raster_combo = QtWidgets.QComboBox()
+        self.raster_combo.setFixedSize(600, 25)
+        self._populate_raster_combo(self.raster_combo)
+        self.layout.addWidget(self.raster_combo)
+
+        # Combo box for positive label layers
+        self.vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
+        self.vec_positive_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.vec_positive_label.setFixedSize(600, 15)
+        self.layout.addWidget(self.vec_positive_label)
+        self.vec_positive_combo = QtWidgets.QComboBox()
+        self.vec_positive_combo.setFixedSize(600, 25)
+        self._populate_vector_combo(self.vec_positive_combo)
+        self.layout.addWidget(self.vec_positive_combo)
+
+        # Combo box for negative label layers
+        self.vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
+        self.vec_negative_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        self.vec_negative_label.setFixedSize(600, 15)
+        self.layout.addWidget(self.vec_negative_label)
+        self.vec_negative_combo = QtWidgets.QComboBox()
+        self.vec_negative_combo.setFixedSize(600, 25)
+        self._populate_vector_combo(self.vec_negative_combo)
+        self.layout.addWidget(self.vec_negative_combo)
 
         # Create a horizontal layout for buttons (zoom in/out and load raster)
         button_layout = QtWidgets.QHBoxLayout()
 
-        # Add Zoom In Button
-        zoom_in_button = QtWidgets.QPushButton("Zoom In")
-        zoom_in_button.clicked.connect(self.zoom_in)
-        button_layout.addWidget(zoom_in_button)
-
-        # Add Zoom Out Button
-        zoom_out_button = QtWidgets.QPushButton("Zoom Out")
-        zoom_out_button.clicked.connect(self.zoom_out)
-        button_layout.addWidget(zoom_out_button)
-
-        # Add Load Raster Button
-        load_raster_button = QtWidgets.QPushButton("Load Raster")
-        load_raster_button.clicked.connect(self.load_raster)
-        load_raster_button.setFixedSize(32, 32)
-        button_layout.addWidget(load_raster_button)
+        # Add run button
+        run_button = QtWidgets.QPushButton("run")
+        run_button.clicked.connect(self.run_classification)
+        run_button.setFixedSize(64, 32)
+        button_layout.addWidget(run_button)
 
         # Add the button layout to the main layout
-        layout.addLayout(button_layout)
+        self.layout.addLayout(button_layout)
 
         # Set the layout to the dialog
-        self.setLayout(layout)
+        self.layout.setSpacing(0)
+        self.setLayout(self.layout)
 
-    def zoom_in(self):
-        self.canvas.zoomIn()
+    def run_classification(self):
+        """Run the classification algorithm."""
 
-    def zoom_out(self):
-        self.canvas.zoomOut()
+        # Get current selections
+        raster_layer = QgsProject.instance().mapLayersByName(
+            self.raster_combo.currentText()
+        )[0]
+        vec_positive_layer = QgsProject.instance().mapLayersByName(
+            self.vec_positive_combo.currentText()
+        )[0]
+        vec_negative_layer = QgsProject.instance().mapLayersByName(
+            self.vec_negative_combo.currentText()
+        )[0]
 
-    def load_raster(self):
-        # Open a file dialog to select a raster file
-        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Open Raster", "", "Raster Files (*.tif *.tiff *.img)")
+        print(f"Raster Layer: {raster_layer}")
+        print(f"Positive Vector Layer: {vec_positive_layer}")
+        print(f"Negative Vector Layer: {vec_negative_layer}")
 
-        if file_path:
-            # Load the raster layer
-            raster_layer = QgsRasterLayer(file_path, "Loaded Raster")
+        ds_raster = rioxarray.open_rasterio(raster_layer.source())
+        print(ds_raster)
 
-            # Check if the raster layer is valid
-            if not raster_layer.isValid():
-                QtWidgets.QMessageBox.critical(self, "Error", "Failed to load the raster file.")
-                return
+        # Convert positive vector layer to GeoDataFrame
+        positive_vector_gdf = _qgs_vector_layer_to_gdf(vec_positive_layer)
+        print(positive_vector_gdf)
 
-            # Add the raster layer to the current project
-            QgsProject.instance().addMapLayer(raster_layer)
+        # Convert negative vector layer to GeoDataFrame
+        negative_vector_gdf = _qgs_vector_layer_to_gdf(vec_negative_layer)
+        print(negative_vector_gdf)
 
-            # Set the canvas to show the raster layer
-            self.canvas.setLayers([raster_layer])
+    def _populate_raster_combo(self, combo_box):
+        """Populate the raster combo box with the loaded raster layers."""
 
-            # Zoom to the full extent of the raster layer
-            self.canvas.setExtent(raster_layer.extent())
-            self.canvas.refresh()
+        # Get the list of layers in the current QGIS project
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsRasterLayer):
+                self.raster_combo.addItem(layer.name())
+
+    def _populate_vector_combo(self, combo_box):
+        """Poluate the vector combo box with the loaded vector layers."""
+
+        # Get the list of layers in the current QGIS project
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsVectorLayer):
+                combo_box.addItem(layer.name())
+
+
+def _qgs_vector_layer_to_gdf(qgs_layer):
+    """Convert QgsVectorLayer to GeoPandas DataFrame"""
+    features = [f for f in qgs_layer.getFeatures()]
+    geometries = [shapely.from_wkt(f.geometry().asWkt()) for f in features]
+    attributes = [f.attributes() for f in features]
+    field_names = [field.name() for field in qgs_layer.fields()]
+    gdf = gpd.GeoDataFrame(attributes, columns=field_names, geometry=geometries)
+    return gdf
+
+
+def _sort_layers(layers):
+    """Get all layers sorted by active layers first."""
+    layer_tree_root = QgsProject.instance().layerTreeRoot()
+
+    # Separate active and inactive layers
+    active_layers = []
+    inactive_layers = []
+    for layer in layers:
+        if layer_tree_root.findLayer(layer.id()).isVisible():
+            active_layers.append(layer)
+        else:
+            inactive_layers.append(layer)
+
+    # Combine active layers first, then inactive layers
+    sorted_layers = active_layers + inactive_layers
+    return sorted_layers

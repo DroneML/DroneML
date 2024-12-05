@@ -3,8 +3,10 @@ from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 import shapely
 import geopandas as gpd
 import rioxarray
+from pyproj import CRS
 
 FONTSIZE = 16
+
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -88,16 +90,35 @@ class DroneMLDialog(QtWidgets.QDialog):
         print(f"Positive Vector Layer: {vec_positive_layer}")
         print(f"Negative Vector Layer: {vec_negative_layer}")
 
-        ds_raster = rioxarray.open_rasterio(raster_layer.source())
-        print(ds_raster)
-
-        # Convert positive vector layer to GeoDataFrame
+        # Load data as Python objects
+        ds_raster = rioxarray.open_rasterio(raster_layer.source())  # Xarray DataArray
         positive_vector_gdf = _qgs_vector_layer_to_gdf(vec_positive_layer)
-        print(positive_vector_gdf)
-
-        # Convert negative vector layer to GeoDataFrame
         negative_vector_gdf = _qgs_vector_layer_to_gdf(vec_negative_layer)
-        print(negative_vector_gdf)
+
+        # Align CRS
+        # Covert from vector CRS to raster CRS, since raster can be big to reproject
+        # Set raster CRS with EPSG code from QGIS layer
+        ds_raster = ds_raster.rio.write_crs(
+            CRS.from_string(raster_layer.crs().authid()), inplace=True
+        ) 
+        # Set vector CRS with EPSG code from QGIS vect layers, then convert to raster CRS
+        positive_vector_gdf = positive_vector_gdf.set_crs(
+            CRS.from_string(vec_positive_layer.crs().authid())
+        ).to_crs(ds_raster.rio.crs)
+        negative_vector_gdf = negative_vector_gdf.set_crs(
+            CRS.from_string(vec_negative_layer.crs().authid())
+        ).to_crs(ds_raster.rio.crs)
+
+        # # DEBUG: save ds_raster, positive_vector_gdf and negative_vector_gdf as pikle for ML model
+        # # No abs path specified because QGIS installed in Win system
+        # # Use Python console os.getcwd() to get the output location
+        # OUT_PATH = "data_debug.pkl"
+        # import pickle
+
+        # with open(OUT_PATH, "wb") as f:
+        #     pickle.dump(
+        #         [ds_raster.compute(), positive_vector_gdf, negative_vector_gdf], f
+        #     )
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""

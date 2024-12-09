@@ -150,7 +150,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Add the new raster layer to QGIS
         for layer_name, path in zip(
-            ["positive", "negative"],
+            ["negative_prediction", "positive_prediction"],
             [path_negative_prediction, path_positive_prediction],
         ):
             new_raster_layer = QgsRasterLayer(path, layer_name)

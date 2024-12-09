@@ -2,15 +2,26 @@
 
 QGIS plugin for drone image classification using machine learning.
 
-## Installation
+## Installation (prototype)
 
-Clone this GitHub repository to your local machine.
+Dowload the [ZIP file of DroneML](https://nlesc-my.sharepoint.com/:u:/g/personal/o_ku_esciencecenter_nl/ETVp8wcBhJ1Com3PDohe5eQB219nCHs6wJURJymwqR6uRw?e=lOYkvn).
 
-```bash
-git clone git@github.com:rogerkuou/DroneML.git
+In QGIS, go to `Plugins` > `Python Console`.
+
+Run the following Python code to install the dependencies required by the plugin:
+
+```python
+import pip
+pip.main(["install", "tqdm", "rioxarray", "geopandas", "scikit-learn", "torch", "torchvision", "torchinfo"]
 ```
 
-Copy the `droneml` folder to the QGIS plugins directory. Examples:
+Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file   
+
+### Manual Installation if install from ZIP fails
+
+Manually unzip the `droneml.zip` file to folder `droneml`.
+
+Copy the `droneml` folder to the QGIS plugins directory. Examples on different operating systems:
 
 - Windows: `C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\minimal`
 - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/minimal`

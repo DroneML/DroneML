@@ -19,7 +19,17 @@ Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and
 
 ### Manual Installation if install from ZIP fails
 
-Manually unzip the `droneml.zip` file to folder `droneml`.
+Manually unzip the `droneml.zip` file to folder `droneml`. And `cd` into the `droneml` folder.
+
+```bash
+cd droneml
+```
+
+Clone the `segmentmytif` repository inside the `droneml` folder, which is needed for the segmentation part of the plugin.
+
+```bash
+git clone git@github.com:DroneML/segmentmytif.git
+```
 
 Copy the `droneml` folder to the QGIS plugins directory. Examples on different operating systems:
 

@@ -7,6 +7,7 @@ import geopandas as gpd
 import rioxarray
 from pyproj import CRS
 from .segmentmytif.src.segmentmytiff.main import make_predictions
+from dask.distributed import LocalCluster, Client
 
 FONTSIZE = 16
 
@@ -77,6 +78,10 @@ class DroneMLDialog(QtWidgets.QDialog):
 
     def run_classification(self):
         """Run the classification algorithm."""
+
+        # Start a local Dask cluster to handle tiff segmentation
+        cluster = LocalCluster()
+        client = Client(cluster)
 
         # Get current selections
         raster_layer = QgsProject.instance().mapLayersByName(
@@ -158,6 +163,9 @@ class DroneMLDialog(QtWidgets.QDialog):
                 print("Failed to load the raster layer!")
             else:
                 QgsProject.instance().addMapLayer(new_raster_layer)
+
+        # Close the client as process when finished
+        client.close()
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""

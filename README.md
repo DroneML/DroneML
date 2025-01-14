@@ -7,7 +7,7 @@ QGIS plugin for drone image classification using machine learning.
 Clone this GitHub repository to your local machine.
 
 ```bash
-git clone git@github.com:rogerkuou/DroneML.git
+git clone git@github.com:DroneML/DroneML.git
 ```
 
 Copy the `droneml` folder to the QGIS plugins directory. Examples:

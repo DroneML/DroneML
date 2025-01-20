@@ -14,7 +14,7 @@ Run the following Python code to install the dependencies required by the plugin
 import pip
 pip.main(["install", "tqdm", "rioxarray", "geopandas", "scikit-learn", "torch", "torchvision", "torchinfo"]
 ```
-
+Restart QGIS for changes to your Python package installation to take effect.
 Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file   
 
 ### Manual Installation if install from ZIP fails

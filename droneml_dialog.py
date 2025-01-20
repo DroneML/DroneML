@@ -121,19 +121,19 @@ class DroneMLDialog(QtWidgets.QDialog):
         raster_positive = ds_raster.rio.clip(positive_vector_gdf.geometry, drop=False)
         raster_negative = ds_raster.rio.clip(negative_vector_gdf.geometry, drop=False)
 
-        # Conver the to a binary mask
+        # Convert the raster to a binary mask
         positive_labels = raster_positive.where(
             raster_positive.isnull(), 1
-        )  # Covert non-nan values to 1
+        )  # Convert non-nan values to 1
         positive_labels = positive_labels.where(
             positive_labels == 1, -1
-        )  # Covert non-positive values to -1
+        )  # Convert non-positive values to -1
         negative_labels = raster_negative.where(
             raster_negative.isnull(), 0
-        )  # Covert non-nan values to 0
+        )  # Convert non-nan values to 0
         negative_labels = negative_labels.where(
             negative_labels == 0, -1
-        )  # Covert non-negative values to -1
+        )  # Convert non-negative values to -1
         labels = (
             positive_labels * negative_labels * -1
         )  # Combine positive and negative labels

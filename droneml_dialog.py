@@ -1,13 +1,8 @@
+from pathlib import Path
 from qgis.PyQt import QtWidgets
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
-import os
-import shapely
-import numpy as np
-import geopandas as gpd
-import rioxarray
-from pyproj import CRS
-from .segmentmytif.src.segmentmytiff.main import make_predictions
-from dask.distributed import LocalCluster, Client
+from segmentmytif.main import read_input_and_labels_and_save_predictions
+from segmentmytif.features import FeatureType
 
 FONTSIZE = 16
 
@@ -79,93 +74,49 @@ class DroneMLDialog(QtWidgets.QDialog):
     def run_classification(self):
         """Run the classification algorithm."""
 
-        # Start a local Dask cluster to handle tiff segmentation
-        cluster = LocalCluster()
-        client = Client(cluster)
-
-        # Get current selections
-        raster_layer = QgsProject.instance().mapLayersByName(
-            self.raster_combo.currentText()
-        )[0]
-        vec_positive_layer = QgsProject.instance().mapLayersByName(
-            self.vec_positive_combo.currentText()
-        )[0]
-        vec_negative_layer = QgsProject.instance().mapLayersByName(
-            self.vec_negative_combo.currentText()
-        )[0]
-
-        print(f"Raster Layer: {raster_layer}")
-        print(f"Positive Vector Layer: {vec_positive_layer}")
-        print(f"Negative Vector Layer: {vec_negative_layer}")
-
-        # Load data as Python objects
-        ds_raster = rioxarray.open_rasterio(raster_layer.source())  # Xarray DataArray
-        positive_vector_gdf = _qgs_vector_layer_to_gdf(vec_positive_layer)
-        negative_vector_gdf = _qgs_vector_layer_to_gdf(vec_negative_layer)
-
-        # Align CRS
-        # Covert from vector CRS to raster CRS, since raster can be big to reproject
-        # Set raster CRS with EPSG code from QGIS layer
-        ds_raster = ds_raster.rio.write_crs(
-            CRS.from_string(raster_layer.crs().authid()), inplace=True
+        # Get file paths of the selected layers
+        raster_path = (
+            QgsProject.instance()
+            .mapLayersByName(self.raster_combo.currentText())[0]
+            .source()
         )
-        # Set vector CRS with EPSG code from QGIS vect layers, then convert to raster CRS
-        positive_vector_gdf = positive_vector_gdf.set_crs(
-            CRS.from_string(vec_positive_layer.crs().authid())
-        ).to_crs(ds_raster.rio.crs)
-        negative_vector_gdf = negative_vector_gdf.set_crs(
-            CRS.from_string(vec_negative_layer.crs().authid())
-        ).to_crs(ds_raster.rio.crs)
+        pos_labels_path = (
+            QgsProject.instance()
+            .mapLayersByName(self.vec_positive_combo.currentText())[0]
+            .source()
+        )
+        neg_labels_path = (
+            QgsProject.instance()
+            .mapLayersByName(self.vec_negative_combo.currentText())[0]
+            .source()
+        )
 
-        # Crop the raster
-        raster_positive = ds_raster.rio.clip(positive_vector_gdf.geometry, drop=False)
-        raster_negative = ds_raster.rio.clip(negative_vector_gdf.geometry, drop=False)
+        print(f"Raster Layer: {raster_path}")
+        print(f"Positive Vector Layer: {pos_labels_path}")
+        print(f"Negative Vector Layer: {neg_labels_path}")
 
-        # Convert the raster to a binary mask
-        positive_labels = raster_positive.where(
-            raster_positive.isnull(), 1
-        )  # Convert non-nan values to 1
-        positive_labels = positive_labels.where(
-            positive_labels == 1, -1
-        )  # Convert non-positive values to -1
-        negative_labels = raster_negative.where(
-            raster_negative.isnull(), 0
-        )  # Convert non-nan values to 0
-        negative_labels = negative_labels.where(
-            negative_labels == 0, -1
-        )  # Convert non-negative values to -1
-        labels = (
-            positive_labels * negative_labels * -1
-        )  # Combine positive and negative labels
-
-        # Make segmentation predictions
-        results = make_predictions(ds_raster.data, labels.data)
-
-        negative_prediction = ds_raster.copy()
-        negative_prediction.data = np.expand_dims(results[0, :, :], axis=0)
-        positive_prediction = ds_raster.copy()
-        positive_prediction.data = np.expand_dims(results[1, :, :], axis=0)
-
-        # Write the DataArray to a GeoTIFF
-        project_dir = os.path.dirname(QgsProject.instance().fileName())
-        path_negative_prediction = os.path.join(project_dir, "negative_prediction.tif")
-        path_positive_prediction = os.path.join(project_dir, "positive_prediction.tif")
-        negative_prediction.rio.to_raster(path_negative_prediction)
-        positive_prediction.rio.to_raster(path_positive_prediction)
+        prediction_tif = read_input_and_labels_and_save_predictions(
+            raster_path,
+            pos_labels_path,
+            neg_labels_path,
+            output_path=Path("./prediction.tif"),
+            feature_type=FeatureType.FLAIR,
+            features_path=None,
+            compute_mode="normal",
+            chunks=None,
+            chunk_overlap=25,
+        )
 
         # Add the new raster layer to QGIS
         for layer_name, path in zip(
-            ["negative_prediction", "positive_prediction"],
-            [path_negative_prediction, path_positive_prediction],
+            ["prediction"],
+            [prediction_tif],
         ):
             new_raster_layer = QgsRasterLayer(path, layer_name)
             if not new_raster_layer.isValid():
                 print("Failed to load the raster layer!")
             else:
                 QgsProject.instance().addMapLayer(new_raster_layer)
-
-        # Close the client as process when finished
-        client.close()
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""

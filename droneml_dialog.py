@@ -3,6 +3,10 @@ from qgis.PyQt import QtWidgets
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
+import logging
+
+# Turn off the logger
+logging.getLogger().setLevel(logging.CRITICAL)
 
 FONTSIZE = 16
 
@@ -75,17 +79,17 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Run the classification algorithm."""
 
         # Get file paths of the selected layers
-        raster_path = (
+        raster_path = Path(
             QgsProject.instance()
             .mapLayersByName(self.raster_combo.currentText())[0]
             .source()
         )
-        pos_labels_path = (
+        pos_labels_path = Path(
             QgsProject.instance()
             .mapLayersByName(self.vec_positive_combo.currentText())[0]
             .source()
         )
-        neg_labels_path = (
+        neg_labels_path = Path(
             QgsProject.instance()
             .mapLayersByName(self.vec_negative_combo.currentText())[0]
             .source()
@@ -99,7 +103,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             raster_path,
             pos_labels_path,
             neg_labels_path,
-            output_path=Path("./prediction.tif"),
+            output_path=raster_path.parent.parent / "prediction.tif",
             feature_type=FeatureType.FLAIR,
             features_path=None,
             compute_mode="normal",
@@ -108,15 +112,12 @@ class DroneMLDialog(QtWidgets.QDialog):
         )
 
         # Add the new raster layer to QGIS
-        for layer_name, path in zip(
-            ["prediction"],
-            [prediction_tif],
-        ):
-            new_raster_layer = QgsRasterLayer(path, layer_name)
-            if not new_raster_layer.isValid():
-                print("Failed to load the raster layer!")
-            else:
-                QgsProject.instance().addMapLayer(new_raster_layer)
+
+        new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
+        if not new_raster_layer.isValid():
+            print("Failed to load the raster layer!")
+        else:
+            QgsProject.instance().addMapLayer(new_raster_layer)
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
@@ -133,16 +134,6 @@ class DroneMLDialog(QtWidgets.QDialog):
         for layer in self.qgis_layers:
             if isinstance(layer, QgsVectorLayer):
                 combo_box.addItem(layer.name())
-
-
-def _qgs_vector_layer_to_gdf(qgs_layer):
-    """Convert QgsVectorLayer to GeoPandas DataFrame"""
-    features = [f for f in qgs_layer.getFeatures()]
-    geometries = [shapely.from_wkt(f.geometry().asWkt()) for f in features]
-    attributes = [f.attributes() for f in features]
-    field_names = [field.name() for field in qgs_layer.fields()]
-    gdf = gpd.GeoDataFrame(attributes, columns=field_names, geometry=geometries)
-    return gdf
 
 
 def _sort_layers(layers):

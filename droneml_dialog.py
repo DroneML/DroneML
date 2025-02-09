@@ -27,74 +27,89 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Create a layout to organize widgets in the dialog
         self.layout = QtWidgets.QVBoxLayout()
 
-        # Combo box for raster layers
-        # Label
-        self.raster_label = QtWidgets.QLabel("Raster layer for training:")
-        self.raster_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.raster_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.raster_label)
-        # Combo box
-        self.raster_combo = QtWidgets.QComboBox()
-        self.raster_combo.setFixedSize(600, 25)
-        self._populate_raster_combo(self.raster_combo)
+        # Add raster layer combo box
+        raster_label, self.raster_combo = self._get_combo_box(
+            "Raster layer for training:", self._populate_raster_combo
+        )
+        self.layout.addWidget(raster_label)
         self.layout.addWidget(self.raster_combo)
 
-        # Combo box for positive label layers
-        self.vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
-        self.vec_positive_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.vec_positive_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.vec_positive_label)
-        self.vec_positive_combo = QtWidgets.QComboBox()
-        self.vec_positive_combo.setFixedSize(600, 25)
-        self._populate_vector_combo(self.vec_positive_combo)
+        # Add positive label vector layer combo box
+        pos_label, self.vec_positive_combo = self._get_combo_box(
+            "Vector layer for positive labels:", self._populate_vector_combo
+        )
+        self.layout.addWidget(pos_label)
         self.layout.addWidget(self.vec_positive_combo)
 
-        # Combo box for negative label layers
-        self.vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
-        self.vec_negative_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.vec_negative_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.vec_negative_label)
-        self.vec_negative_combo = QtWidgets.QComboBox()
-        self.vec_negative_combo.setFixedSize(600, 25)
-        self._populate_vector_combo(self.vec_negative_combo)
+        # Add negative label vector layer combo box
+        neg_label, self.vec_negative_combo = self._get_combo_box(
+            "Vector layer for negative labels:", self._populate_vector_combo
+        )
+        self.layout.addWidget(neg_label)
         self.layout.addWidget(self.vec_negative_combo)
 
-        # Radio buttons for feature type
-        self.feature_type_label = QtWidgets.QLabel("Feature type:")
-        self.feature_type_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.feature_type_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.feature_type_label)
-        self.feature_type_group = QtWidgets.QButtonGroup(self)
-        self.feature_type_layout = QtWidgets.QHBoxLayout()
-        self.feature_type_flair = QtWidgets.QRadioButton("FLAIR")
-        self.feature_type_flair.setChecked(True)
-        self.feature_type_identical = QtWidgets.QRadioButton("IDENTITY")
-        self.feature_type_group.addButton(self.feature_type_flair)
-        self.feature_type_group.addButton(self.feature_type_identical)
-        self.feature_type_layout.addWidget(self.feature_type_flair)
-        self.feature_type_layout.addWidget(self.feature_type_identical)
+        # Add radio buttons for feature type
+        feature_label, self.feature_type_group, self.feature_type_layout = (
+            self._get_radio_buttons("Feature type:", ["FLAIR", "IDENTITY"], "FLAIR")
+        )
+        self.layout.addWidget(feature_label)
         self.layout.addLayout(self.feature_type_layout)
 
-        # Radio buttons for compute mode
-        self.compute_mode_label = QtWidgets.QLabel("Compute mode:")
-        self.compute_mode_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.compute_mode_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.compute_mode_label)
-        self.compute_mode_group = QtWidgets.QButtonGroup(self)
-        self.compute_mode_layout = QtWidgets.QHBoxLayout()
-        self.compute_mode_normal = QtWidgets.QRadioButton("Normal")
-        self.compute_mode_normal.setChecked(True)
-        self.compute_mode_parallel = QtWidgets.QRadioButton("Parallel")
-        self.compute_mode_safe = QtWidgets.QRadioButton("Safe")
-        self.compute_mode_group.addButton(self.compute_mode_normal)
-        self.compute_mode_group.addButton(self.compute_mode_parallel)
-        self.compute_mode_group.addButton(self.compute_mode_safe)
-        self.compute_mode_layout.addWidget(self.compute_mode_normal)
-        self.compute_mode_layout.addWidget(self.compute_mode_parallel)
-        self.compute_mode_layout.addWidget(self.compute_mode_safe)
+        # Add radio buttons for compute mode
+        compute_label, self.compute_mode_group, self.compute_mode_layout = (
+            self._get_radio_buttons(
+                "Compute mode:", ["Normal", "Parallel", "Safe"], "Normal"
+            )
+        )
+        self.layout.addWidget(compute_label)
         self.layout.addLayout(self.compute_mode_layout)
 
-        # Advanced Options
+        # Add advanced options
+        self._add_advanced_options()
+
+        # Add run button
+        button_layout = QtWidgets.QHBoxLayout()
+        run_button = QtWidgets.QPushButton("run")
+        run_button.clicked.connect(self.run_classification)
+        run_button.setFixedSize(64, 32)
+        button_layout.addWidget(run_button)
+
+        # Add the button layout to the main layout
+        self.layout.addLayout(button_layout)
+
+        # Set the layout to the dialog
+        self.layout.setSpacing(0)
+        self.setLayout(self.layout)
+
+    def _get_combo_box(self, label_text, populate_function):
+        """Add a combo box with a label to the layout."""
+        label = QtWidgets.QLabel(label_text)
+        label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label.setFixedSize(600, 15)
+
+        combo_box = QtWidgets.QComboBox()
+        combo_box.setFixedSize(600, 25)
+        populate_function(combo_box)
+
+        return label, combo_box
+
+    def _get_radio_buttons(self, label_text, options, default_option):
+        """Add a set of radio buttons with a label to the layout."""
+        label = QtWidgets.QLabel(label_text)
+        label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label.setFixedSize(600, 15)
+        button_group = QtWidgets.QButtonGroup(self)
+        layout = QtWidgets.QHBoxLayout()
+        for option in options:
+            radio_button = QtWidgets.QRadioButton(option)
+            if option == default_option:
+                radio_button.setChecked(True)
+            button_group.addButton(radio_button)
+            layout.addWidget(radio_button)
+        return label, button_group, layout
+
+    def _add_advanced_options(self):
+        """Add advanced options section to the layout."""
         self.advanced_group_box = QtWidgets.QGroupBox("Advanced Options")
         self.advanced_group_box.setCheckable(True)
         self.advanced_group_box.setChecked(False)
@@ -120,22 +135,6 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.advanced_group_box.setLayout(self.advanced_layout)
         self.layout.addWidget(self.advanced_group_box)
 
-        # Create a horizontal layout for buttons (zoom in/out and load raster)
-        button_layout = QtWidgets.QHBoxLayout()
-
-        # Add run button
-        run_button = QtWidgets.QPushButton("run")
-        run_button.clicked.connect(self.run_classification)
-        run_button.setFixedSize(64, 32)
-        button_layout.addWidget(run_button)
-
-        # Add the button layout to the main layout
-        self.layout.addLayout(button_layout)
-
-        # Set the layout to the dialog
-        self.layout.setSpacing(0)
-        self.setLayout(self.layout)
-
     def run_classification(self):
         """Run the classification algorithm."""
 
@@ -159,18 +158,18 @@ class DroneMLDialog(QtWidgets.QDialog):
         print(f"Positive Vector Layer: {pos_labels_path}")
         print(f"Negative Vector Layer: {neg_labels_path}")
 
-        # Get Feture Type
+        # Get Feature Type
         feature_type = (
             FeatureType.FLAIR
-            if self.feature_type_flair.isChecked()
+            if self.feature_type_group.buttons()[0].isChecked()
             else FeatureType.IDENTITY
         )
         print(f"Feature Type: {feature_type}")
 
         # Get Compute Mode
-        if self.compute_mode_normal.isChecked():
+        if self.compute_mode_group.buttons()[0].isChecked():
             compute_mode = "normal"
-        elif self.compute_mode_parallel.isChecked():
+        elif self.compute_mode_group.buttons()[1].isChecked():
             compute_mode = "parallel"
         else:
             compute_mode = "safe"
@@ -198,7 +197,6 @@ class DroneMLDialog(QtWidgets.QDialog):
         )
 
         # Add the new raster layer to QGIS
-
         new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
         if not new_raster_layer.isValid():
             print("Failed to load the raster layer!")
@@ -207,16 +205,12 @@ class DroneMLDialog(QtWidgets.QDialog):
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
-
-        # Get the list of layers in the current QGIS project
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
-                self.raster_combo.addItem(layer.name())
+                combo_box.addItem(layer.name())
 
     def _populate_vector_combo(self, combo_box):
-        """Poluate the vector combo box with the loaded vector layers."""
-
-        # Get the list of layers in the current QGIS project
+        """Populate the vector combo box with the loaded vector layers."""
         for layer in self.qgis_layers:
             if isinstance(layer, QgsVectorLayer):
                 combo_box.addItem(layer.name())

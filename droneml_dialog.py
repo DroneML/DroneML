@@ -8,8 +8,11 @@ import logging
 # Turn off the logger
 logging.getLogger().setLevel(logging.CRITICAL)
 
-FONTSIZE = 16
-
+# Constants
+FONTSIZE = 16 # Font size for the labels
+LABEL_HEIGHT = 20 # Height of the labels
+WIDGET_WIDTH = 600 # Width of all the widgets
+WIDGET_HEIGHT = 25 # Height of all non-label widgets
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -18,7 +21,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
-        self.resize(800, 600)
+        self.resize(800, 650)
 
         # Get Qgis Layers
         self.qgis_layers = QgsProject.instance().mapLayers().values()
@@ -38,6 +41,9 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.output_path_layout.addWidget(browse_button)
         self.output_path_layout.setAlignment(QtCore.Qt.AlignLeft) 
         self.layout.addLayout(self.output_path_layout)
+
+        # Add a separator
+        self._add_separator()
 
         # Add raster layer combo box
         raster_label, self.raster_combo = self._get_combo_box(
@@ -76,6 +82,9 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.layout.addWidget(compute_label)
         self.layout.addLayout(self.compute_mode_layout)
 
+        # Add a separator
+        self._add_separator()
+
         # Add advanced options
         self._add_advanced_options()
 
@@ -93,6 +102,12 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
 
+    def _add_separator(self):
+        """Add a separator to the layout."""
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.layout.addWidget(separator)
+
     def _browse_output_path(self):
         """Browse for the output path of the prediction."""
         output_path = QtWidgets.QFileDialog.getSaveFileName(
@@ -106,12 +121,12 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Label
         output_label = QtWidgets.QLabel("Output path for prediction:")
         output_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        output_label.setFixedSize(600, 15)
+        output_label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
 
         # Get output path
         # Default output path is the parent directory of the raster layer
         output_path_line_edit = QtWidgets.QLineEdit()
-        output_path_line_edit.setFixedSize(600, 25)
+        output_path_line_edit.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
                 output_path = Path(layer.source()).parent / "prediction.tif"
@@ -120,7 +135,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Add a button to browse for the output path
         browse_button = QtWidgets.QPushButton("...")
         browse_button.clicked.connect(self._browse_output_path)
-        browse_button.setFixedSize(32, 25)
+        browse_button.setFixedSize(32, WIDGET_HEIGHT)
 
         return output_label, output_path_line_edit, browse_button
 
@@ -128,10 +143,10 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Add a combo box with a label to the layout."""
         label = QtWidgets.QLabel(label_text)
         label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        label.setFixedSize(600, 15)
+        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
 
         combo_box = QtWidgets.QComboBox()
-        combo_box.setFixedSize(600, 25)
+        combo_box.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
         populate_function(combo_box)
 
         return label, combo_box
@@ -140,7 +155,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Add a set of radio buttons with a label to the layout."""
         label = QtWidgets.QLabel(label_text)
         label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        label.setFixedSize(600, 15)
+        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
         button_group = QtWidgets.QButtonGroup(self)
         layout = QtWidgets.QHBoxLayout()
         for option in options:
@@ -156,13 +171,13 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.advanced_group_box = QtWidgets.QGroupBox("Advanced Options")
         self.advanced_group_box.setCheckable(True)
         self.advanced_group_box.setChecked(False)
-        self.advanced_group_box.setMaximumHeight(200)
+        self.advanced_group_box.setMaximumHeight(150)
         self.advanced_layout = QtWidgets.QVBoxLayout()
 
         # Chunk size
         self.chunk_size_label = QtWidgets.QLabel("Chunk size:")
         self.chunk_size_spinbox = QtWidgets.QSpinBox()
-        self.chunk_size_spinbox.setRange(250, 10000)
+        self.chunk_size_spinbox.setRange(500, 10000)
         self.chunk_size_spinbox.setValue(100)
         self.advanced_layout.addWidget(self.chunk_size_label)
         self.advanced_layout.addWidget(self.chunk_size_spinbox)

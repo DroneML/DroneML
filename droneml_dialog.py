@@ -1,5 +1,5 @@
 from pathlib import Path
-from qgis.PyQt import QtWidgets
+from qgis.PyQt import QtWidgets, QtCore
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
@@ -26,6 +26,18 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Create a layout to organize widgets in the dialog
         self.layout = QtWidgets.QVBoxLayout()
+
+        # Add input for output path of the prediction
+        # Horizontal layout for output path and button
+        output_label, self.output_path_line_edit, browse_button = (
+            self._get_output_path_input_elements()
+        )
+        self.layout.addWidget(output_label)
+        self.output_path_layout = QtWidgets.QHBoxLayout()
+        self.output_path_layout.addWidget(self.output_path_line_edit)
+        self.output_path_layout.addWidget(browse_button)
+        self.output_path_layout.setAlignment(QtCore.Qt.AlignLeft) 
+        self.layout.addLayout(self.output_path_layout)
 
         # Add raster layer combo box
         raster_label, self.raster_combo = self._get_combo_box(
@@ -80,6 +92,37 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Set the layout to the dialog
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
+
+    def _browse_output_path(self):
+        """Browse for the output path of the prediction."""
+        output_path = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Prediction", "", "TIFF Files (*.tif)"
+        )
+        if output_path[0]:
+            self.output_path_line_edit.setText(output_path[0])
+
+    def _get_output_path_input_elements(self):
+        """Elements for the output path input."""
+        # Label
+        output_label = QtWidgets.QLabel("Output path for prediction:")
+        output_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        output_label.setFixedSize(600, 15)
+
+        # Get output path
+        # Default output path is the parent directory of the raster layer
+        output_path_line_edit = QtWidgets.QLineEdit()
+        output_path_line_edit.setFixedSize(600, 25)
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsRasterLayer):
+                output_path = Path(layer.source()).parent / "prediction.tif"
+        output_path_line_edit.setText(output_path.as_posix())
+
+        # Add a button to browse for the output path
+        browse_button = QtWidgets.QPushButton("...")
+        browse_button.clicked.connect(self._browse_output_path)
+        browse_button.setFixedSize(32, 25)
+
+        return output_label, output_path_line_edit, browse_button
 
     def _get_combo_box(self, label_text, populate_function):
         """Add a combo box with a label to the layout."""
@@ -138,6 +181,9 @@ class DroneMLDialog(QtWidgets.QDialog):
     def run_classification(self):
         """Run the classification algorithm."""
 
+        # Get the output path
+        output_path = Path(self.output_path_line_edit.text())
+
         # Get file paths of the selected layers
         raster_path = Path(
             QgsProject.instance()
@@ -189,7 +235,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             raster_path,
             pos_labels_path,
             neg_labels_path,
-            output_path=raster_path.parent.parent / "prediction.tif",
+            output_path=output_path,
             feature_type=feature_type,
             compute_mode=compute_mode,
             chunks=chunk_size,

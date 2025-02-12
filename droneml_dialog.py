@@ -1,16 +1,18 @@
-from qgis.PyQt import QtWidgets
+from pathlib import Path
+from qgis.PyQt import QtWidgets, QtCore
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
-import os
-import shapely
-import numpy as np
-import geopandas as gpd
-import rioxarray
-from pyproj import CRS
-from .segmentmytif.src.segmentmytiff.main import make_predictions
-from dask.distributed import LocalCluster, Client
+from segmentmytif.main import read_input_and_labels_and_save_predictions
+from segmentmytif.features import FeatureType
+import logging
 
-FONTSIZE = 16
+# Turn off the logger
+logging.getLogger().setLevel(logging.CRITICAL)
 
+# Constants
+FONTSIZE = 16 # Font size for the labels
+LABEL_HEIGHT = 20 # Height of the labels
+WIDGET_WIDTH = 600 # Width of all the widgets
+WIDGET_HEIGHT = 25 # Height of all non-label widgets
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -19,7 +21,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
-        self.resize(800, 600)
+        self.resize(800, 650)
 
         # Get Qgis Layers
         self.qgis_layers = QgsProject.instance().mapLayers().values()
@@ -28,42 +30,66 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Create a layout to organize widgets in the dialog
         self.layout = QtWidgets.QVBoxLayout()
 
-        # Combo box for raster layers
-        # Label
-        self.raster_label = QtWidgets.QLabel("Raster layer for training:")
-        self.raster_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.raster_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.raster_label)
-        # Combo box
-        self.raster_combo = QtWidgets.QComboBox()
-        self.raster_combo.setFixedSize(600, 25)
-        self._populate_raster_combo(self.raster_combo)
+        # Add input for output path of the prediction
+        # Horizontal layout for output path and button
+        output_label, self.output_path_line_edit, browse_button = (
+            self._get_output_path_input_elements()
+        )
+        self.layout.addWidget(output_label)
+        self.output_path_layout = QtWidgets.QHBoxLayout()
+        self.output_path_layout.addWidget(self.output_path_line_edit)
+        self.output_path_layout.addWidget(browse_button)
+        self.output_path_layout.setAlignment(QtCore.Qt.AlignLeft) 
+        self.layout.addLayout(self.output_path_layout)
+
+        # Add a separator
+        self._add_separator()
+
+        # Add raster layer combo box
+        raster_label, self.raster_combo = self._get_combo_box(
+            "Raster layer for training:", self._populate_raster_combo
+        )
+        self.layout.addWidget(raster_label)
         self.layout.addWidget(self.raster_combo)
 
-        # Combo box for positive label layers
-        self.vec_positive_label = QtWidgets.QLabel("Vector layer for positive labels:")
-        self.vec_positive_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.vec_positive_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.vec_positive_label)
-        self.vec_positive_combo = QtWidgets.QComboBox()
-        self.vec_positive_combo.setFixedSize(600, 25)
-        self._populate_vector_combo(self.vec_positive_combo)
+        # Add positive label vector layer combo box
+        pos_label, self.vec_positive_combo = self._get_combo_box(
+            "Vector layer for positive labels:", self._populate_vector_combo
+        )
+        self.layout.addWidget(pos_label)
         self.layout.addWidget(self.vec_positive_combo)
 
-        # Combo box for negative label layers
-        self.vec_negative_label = QtWidgets.QLabel("Vector layer for negative labels:")
-        self.vec_negative_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        self.vec_negative_label.setFixedSize(600, 15)
-        self.layout.addWidget(self.vec_negative_label)
-        self.vec_negative_combo = QtWidgets.QComboBox()
-        self.vec_negative_combo.setFixedSize(600, 25)
-        self._populate_vector_combo(self.vec_negative_combo)
+        # Add negative label vector layer combo box
+        neg_label, self.vec_negative_combo = self._get_combo_box(
+            "Vector layer for negative labels:", self._populate_vector_combo
+        )
+        self.layout.addWidget(neg_label)
         self.layout.addWidget(self.vec_negative_combo)
 
-        # Create a horizontal layout for buttons (zoom in/out and load raster)
-        button_layout = QtWidgets.QHBoxLayout()
+        # Add radio buttons for feature type
+        feature_label, self.feature_type_group, self.feature_type_layout = (
+            self._get_radio_buttons("Feature type:", ["FLAIR", "IDENTITY"], "FLAIR")
+        )
+        self.layout.addWidget(feature_label)
+        self.layout.addLayout(self.feature_type_layout)
+
+        # Add radio buttons for compute mode
+        compute_label, self.compute_mode_group, self.compute_mode_layout = (
+            self._get_radio_buttons(
+                "Compute mode:", ["Normal", "Parallel", "Safe"], "Normal"
+            )
+        )
+        self.layout.addWidget(compute_label)
+        self.layout.addLayout(self.compute_mode_layout)
+
+        # Add a separator
+        self._add_separator()
+
+        # Add advanced options
+        self._add_advanced_options()
 
         # Add run button
+        button_layout = QtWidgets.QHBoxLayout()
         run_button = QtWidgets.QPushButton("run")
         run_button.clicked.connect(self.run_classification)
         run_button.setFixedSize(64, 32)
@@ -76,122 +102,179 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.layout.setSpacing(0)
         self.setLayout(self.layout)
 
+    def _add_separator(self):
+        """Add a separator to the layout."""
+        separator = QtWidgets.QFrame()
+        separator.setFrameShape(QtWidgets.QFrame.HLine)
+        self.layout.addWidget(separator)
+
+    def _browse_output_path(self):
+        """Browse for the output path of the prediction."""
+        output_path = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save Prediction", "", "TIFF Files (*.tif)"
+        )
+        if output_path[0]:
+            self.output_path_line_edit.setText(output_path[0])
+
+    def _get_output_path_input_elements(self):
+        """Elements for the output path input."""
+        # Label
+        output_label = QtWidgets.QLabel("Output path for prediction:")
+        output_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        output_label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+
+        # Get output path
+        # Default output path is the parent directory of the raster layer
+        output_path_line_edit = QtWidgets.QLineEdit()
+        output_path_line_edit.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        for layer in self.qgis_layers:
+            if isinstance(layer, QgsRasterLayer):
+                output_path = Path(layer.source()).parent / "prediction.tif"
+        output_path_line_edit.setText(output_path.as_posix())
+
+        # Add a button to browse for the output path
+        browse_button = QtWidgets.QPushButton("...")
+        browse_button.clicked.connect(self._browse_output_path)
+        browse_button.setFixedSize(32, WIDGET_HEIGHT)
+
+        return output_label, output_path_line_edit, browse_button
+
+    def _get_combo_box(self, label_text, populate_function):
+        """Add a combo box with a label to the layout."""
+        label = QtWidgets.QLabel(label_text)
+        label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+
+        combo_box = QtWidgets.QComboBox()
+        combo_box.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        populate_function(combo_box)
+
+        return label, combo_box
+
+    def _get_radio_buttons(self, label_text, options, default_option):
+        """Add a set of radio buttons with a label to the layout."""
+        label = QtWidgets.QLabel(label_text)
+        label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+        button_group = QtWidgets.QButtonGroup(self)
+        layout = QtWidgets.QHBoxLayout()
+        for option in options:
+            radio_button = QtWidgets.QRadioButton(option)
+            if option == default_option:
+                radio_button.setChecked(True)
+            button_group.addButton(radio_button)
+            layout.addWidget(radio_button)
+        return label, button_group, layout
+
+    def _add_advanced_options(self):
+        """Add advanced options section to the layout."""
+        self.advanced_group_box = QtWidgets.QGroupBox("Advanced Options")
+        self.advanced_group_box.setCheckable(True)
+        self.advanced_group_box.setChecked(False)
+        self.advanced_group_box.setMaximumHeight(150)
+        self.advanced_layout = QtWidgets.QVBoxLayout()
+
+        # Chunk size
+        self.chunk_size_label = QtWidgets.QLabel("Chunk size:")
+        self.chunk_size_spinbox = QtWidgets.QSpinBox()
+        self.chunk_size_spinbox.setRange(500, 10000)
+        self.chunk_size_spinbox.setValue(100)
+        self.advanced_layout.addWidget(self.chunk_size_label)
+        self.advanced_layout.addWidget(self.chunk_size_spinbox)
+
+        # Overlap size
+        self.overlap_size_label = QtWidgets.QLabel("Overlap size:")
+        self.overlap_size_spinbox = QtWidgets.QSpinBox()
+        self.overlap_size_spinbox.setRange(0, 1000)
+        self.overlap_size_spinbox.setValue(25)
+        self.advanced_layout.addWidget(self.overlap_size_label)
+        self.advanced_layout.addWidget(self.overlap_size_spinbox)
+
+        self.advanced_group_box.setLayout(self.advanced_layout)
+        self.layout.addWidget(self.advanced_group_box)
+
     def run_classification(self):
         """Run the classification algorithm."""
 
-        # Start a local Dask cluster to handle tiff segmentation
-        cluster = LocalCluster()
-        client = Client(cluster)
+        # Get the output path
+        output_path = Path(self.output_path_line_edit.text())
 
-        # Get current selections
-        raster_layer = QgsProject.instance().mapLayersByName(
-            self.raster_combo.currentText()
-        )[0]
-        vec_positive_layer = QgsProject.instance().mapLayersByName(
-            self.vec_positive_combo.currentText()
-        )[0]
-        vec_negative_layer = QgsProject.instance().mapLayersByName(
-            self.vec_negative_combo.currentText()
-        )[0]
-
-        print(f"Raster Layer: {raster_layer}")
-        print(f"Positive Vector Layer: {vec_positive_layer}")
-        print(f"Negative Vector Layer: {vec_negative_layer}")
-
-        # Load data as Python objects
-        ds_raster = rioxarray.open_rasterio(raster_layer.source())  # Xarray DataArray
-        positive_vector_gdf = _qgs_vector_layer_to_gdf(vec_positive_layer)
-        negative_vector_gdf = _qgs_vector_layer_to_gdf(vec_negative_layer)
-
-        # Align CRS
-        # Covert from vector CRS to raster CRS, since raster can be big to reproject
-        # Set raster CRS with EPSG code from QGIS layer
-        ds_raster = ds_raster.rio.write_crs(
-            CRS.from_string(raster_layer.crs().authid()), inplace=True
+        # Get file paths of the selected layers
+        raster_path = Path(
+            QgsProject.instance()
+            .mapLayersByName(self.raster_combo.currentText())[0]
+            .source()
         )
-        # Set vector CRS with EPSG code from QGIS vect layers, then convert to raster CRS
-        positive_vector_gdf = positive_vector_gdf.set_crs(
-            CRS.from_string(vec_positive_layer.crs().authid())
-        ).to_crs(ds_raster.rio.crs)
-        negative_vector_gdf = negative_vector_gdf.set_crs(
-            CRS.from_string(vec_negative_layer.crs().authid())
-        ).to_crs(ds_raster.rio.crs)
+        pos_labels_path = Path(
+            QgsProject.instance()
+            .mapLayersByName(self.vec_positive_combo.currentText())[0]
+            .source()
+        )
+        neg_labels_path = Path(
+            QgsProject.instance()
+            .mapLayersByName(self.vec_negative_combo.currentText())[0]
+            .source()
+        )
+        print(f"Raster Layer: {raster_path}")
+        print(f"Positive Vector Layer: {pos_labels_path}")
+        print(f"Negative Vector Layer: {neg_labels_path}")
 
-        # Crop the raster
-        raster_positive = ds_raster.rio.clip(positive_vector_gdf.geometry, drop=False)
-        raster_negative = ds_raster.rio.clip(negative_vector_gdf.geometry, drop=False)
+        # Get Feature Type
+        feature_type = (
+            FeatureType.FLAIR
+            if self.feature_type_group.buttons()[0].isChecked()
+            else FeatureType.IDENTITY
+        )
+        print(f"Feature Type: {feature_type}")
 
-        # Convert the raster to a binary mask
-        positive_labels = raster_positive.where(
-            raster_positive.isnull(), 1
-        )  # Convert non-nan values to 1
-        positive_labels = positive_labels.where(
-            positive_labels == 1, -1
-        )  # Convert non-positive values to -1
-        negative_labels = raster_negative.where(
-            raster_negative.isnull(), 0
-        )  # Convert non-nan values to 0
-        negative_labels = negative_labels.where(
-            negative_labels == 0, -1
-        )  # Convert non-negative values to -1
-        labels = (
-            positive_labels * negative_labels * -1
-        )  # Combine positive and negative labels
+        # Get Compute Mode
+        if self.compute_mode_group.buttons()[0].isChecked():
+            compute_mode = "normal"
+        elif self.compute_mode_group.buttons()[1].isChecked():
+            compute_mode = "parallel"
+        else:
+            compute_mode = "safe"
+        print(f"Compute Mode: {compute_mode}")
 
-        # Make segmentation predictions
-        results = make_predictions(ds_raster.data, labels.data)
+        # Get chunk size and overlap size
+        if self.advanced_group_box.isChecked():
+            chunk_size = self.chunk_size_spinbox.value()
+            overlap_size = self.overlap_size_spinbox.value()
+            print(f"Chunk Size: {chunk_size}")
+            print(f"Overlap Size: {overlap_size}")
+        else:
+            chunk_size = None
+            overlap_size = None
 
-        negative_prediction = ds_raster.copy()
-        negative_prediction.data = np.expand_dims(results[0, :, :], axis=0)
-        positive_prediction = ds_raster.copy()
-        positive_prediction.data = np.expand_dims(results[1, :, :], axis=0)
-
-        # Write the DataArray to a GeoTIFF
-        project_dir = os.path.dirname(QgsProject.instance().fileName())
-        path_negative_prediction = os.path.join(project_dir, "negative_prediction.tif")
-        path_positive_prediction = os.path.join(project_dir, "positive_prediction.tif")
-        negative_prediction.rio.to_raster(path_negative_prediction)
-        positive_prediction.rio.to_raster(path_positive_prediction)
+        prediction_tif = read_input_and_labels_and_save_predictions(
+            raster_path,
+            pos_labels_path,
+            neg_labels_path,
+            output_path=output_path,
+            feature_type=feature_type,
+            compute_mode=compute_mode,
+            chunks=chunk_size,
+            chunk_overlap=overlap_size,
+        )
 
         # Add the new raster layer to QGIS
-        for layer_name, path in zip(
-            ["negative_prediction", "positive_prediction"],
-            [path_negative_prediction, path_positive_prediction],
-        ):
-            new_raster_layer = QgsRasterLayer(path, layer_name)
-            if not new_raster_layer.isValid():
-                print("Failed to load the raster layer!")
-            else:
-                QgsProject.instance().addMapLayer(new_raster_layer)
-
-        # Close the client as process when finished
-        client.close()
+        new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
+        if not new_raster_layer.isValid():
+            print("Failed to load the raster layer!")
+        else:
+            QgsProject.instance().addMapLayer(new_raster_layer)
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
-
-        # Get the list of layers in the current QGIS project
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
-                self.raster_combo.addItem(layer.name())
+                combo_box.addItem(layer.name())
 
     def _populate_vector_combo(self, combo_box):
-        """Poluate the vector combo box with the loaded vector layers."""
-
-        # Get the list of layers in the current QGIS project
+        """Populate the vector combo box with the loaded vector layers."""
         for layer in self.qgis_layers:
             if isinstance(layer, QgsVectorLayer):
                 combo_box.addItem(layer.name())
-
-
-def _qgs_vector_layer_to_gdf(qgs_layer):
-    """Convert QgsVectorLayer to GeoPandas DataFrame"""
-    features = [f for f in qgs_layer.getFeatures()]
-    geometries = [shapely.from_wkt(f.geometry().asWkt()) for f in features]
-    attributes = [f.attributes() for f in features]
-    field_names = [field.name() for field in qgs_layer.fields()]
-    gdf = gpd.GeoDataFrame(attributes, columns=field_names, geometry=geometries)
-    return gdf
 
 
 def _sort_layers(layers):

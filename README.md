@@ -57,7 +57,7 @@ With the following input fields:
   - "Parallel": read in data in chunks and perform the computation with several chunks together. Suitable for medium-sized datasets, where we assume several chunks can fit in memory.
   - "Safe": read in data in chunks, perform the computation with one chunk at a time. Suitable for large datasets that do not fit in memory.
 - Chunk size: The size of the chunk to be read in. Only used in "Parallel" and "Safe" mode.
-- Overlap: The overlap between chunks when performing feaure extraction. Only used in "Parallel" and "Safe" mode.
+- Overlap: The overlap between chunks when performing feature extraction. Only used in "Parallel" and "Safe" mode. Because of possible edge effects, a minimum overlap of 20 is recommended.
 
 ## Tips
 

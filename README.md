@@ -18,7 +18,7 @@ Restart QGIS for changes to your Python package installation to take effect.
 
 ### Step 2: Install DroneML plugin from ZIP
 
-Dowload the [ZIP file of DroneML](LINK_TO_GITHUB_RELEASE/TO_BE_ADDED).
+Dowload the ZIP file of DroneML from [this page](https://github.com/DroneML/DroneML/blob/release/DroneML.zip).
 
 Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file   
 

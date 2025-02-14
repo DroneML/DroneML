@@ -4,7 +4,7 @@ QGIS plugin for drone image classification using machine learning.
 
 ## Installation
 
-### Step 1: Prepare Python environment in QGIS 
+### Step 1: Install dependencies
 
 In QGIS, go to `Plugins` > `Python Console`.
 
@@ -14,13 +14,14 @@ Run the following Python code to install the dependencies required by the plugin
 !pip install -U segmentmytif
 ```
 
-Restart QGIS for changes to your Python package installation to take effect.
+### Step 2: Restart QGIS
+Restart QGIS for the installation of the dependencies (step 1) to take effect.
 
-### Step 2: Install DroneML plugin from ZIP
+### Step 3: Install DroneML plugin from ZIP
 
-Dowload the ZIP file of DroneML from [this page](https://github.com/DroneML/DroneML/blob/release/DroneML.zip).
+Download the ZIP file of DroneML from [this page](https://github.com/DroneML/DroneML/blob/release/DroneML.zip).
 
-Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file   
+Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file.
 
 ## Getting Started
 

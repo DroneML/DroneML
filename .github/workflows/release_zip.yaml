@@ -24,7 +24,7 @@ jobs:
 
       - name: Rename Folder Structure
         run: |
-          unzip ${ env.DOWNLOAD_ZIP }.zip -d extracted_files
+          unzip ${DOWNLOAD_ZIP}.zip -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
           mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/release

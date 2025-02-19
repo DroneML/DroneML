@@ -21,9 +21,6 @@ jobs:
           ZIP_URL=$(curl -s https://api.github.com/repos/DroneML/DroneML/releases/latest | jq -r '.zipball_url')
           DOWNLOAD_ZIP="DroneML-${RELEASE_TAG}.zip"
           curl -L -o ${DOWNLOAD_ZIP} -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" ${ZIP_URL}
-
-      - name: Rename Folder Structure
-        run: |
           unzip ${DOWNLOAD_ZIP}.zip -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
@@ -32,9 +29,6 @@ jobs:
           mv extracted_files/release release
           zip -r release.zip release
           ls -l
-
-      - name: Update `release` Branch
-        run: |
           git checkout --orphan release
           git clean -fd
           git add release.zip

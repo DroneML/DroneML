@@ -21,7 +21,7 @@ jobs:
           ZIP_URL=$(curl -s https://api.github.com/repos/DroneML/DroneML/releases/latest | jq -r '.zipball_url')
           DOWNLOAD_ZIP="DroneML-${RELEASE_TAG}.zip"
           curl -L -o ${DOWNLOAD_ZIP} -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" ${ZIP_URL}
-          unzip ${DOWNLOAD_ZIP}.zip -d extracted_files
+          unzip ${DOWNLOAD_ZIP} -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
           mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/release

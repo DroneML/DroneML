@@ -12,8 +12,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Ensure we can manipulate branches
 
       - name: Download Release ZIP
         run: |
@@ -25,10 +23,12 @@ jobs:
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
           mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/DroneML
+          ls -l extracted_files
           mkdir -p DroneML
           mv extracted_files/DroneML DroneML
+          ls -l .
+          ls -l DroneML
           zip -r DroneML.zip DroneML
-          ls -l
           git checkout --orphan release
           git add DroneML.zip
           git commit -m "Add latest release ZIP with renamed folder structure"

@@ -1,7 +1,9 @@
 name: Release Branch Update
 
 on:
-  workflow_dispatch:
+  pull_request:
+    branches:
+    - main
 
 jobs:
   update-release-branch:

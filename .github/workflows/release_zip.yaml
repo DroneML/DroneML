@@ -19,7 +19,7 @@ jobs:
         run: |
           RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
           ZIP_URL=$(curl -s https://api.github.com/repos/DroneML/DroneML/releases/latest | jq -r '.zipball_url')
-          DOWNLOAD_ZIP=$(DroneML "${RELEASE_TAG}" .zip)
+          DOWNLOAD_ZIP="DroneML-${RELEASE_TAG}.zip"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
           echo "ZIP_URL=${ZIP_URL}" >> $GITHUB_ENV
           echo "DOWNLOAD_ZIP=${DOWNLOAD_ZIP}" >> $GITHUB_ENV

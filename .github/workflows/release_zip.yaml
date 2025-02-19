@@ -22,7 +22,7 @@ jobs:
           unzip ${DOWNLOAD_ZIP} -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
-          mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/DroneML
+          mv extracted_files/${ORIGINAL_FOLDER} extracted_files/DroneML
           ls -l extracted_files
           mkdir -p DroneML
           mv extracted_files/DroneML DroneML

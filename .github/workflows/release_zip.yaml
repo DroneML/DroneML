@@ -1,9 +1,8 @@
 name: Release Branch Update
 
 on:
-  pull_request:
-    branches:
-    - main
+  release:
+    types: [published]
 
 permissions:
   contents: write

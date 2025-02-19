@@ -24,12 +24,12 @@ jobs:
           unzip ${DOWNLOAD_ZIP} -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
-          mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/release
-          mkdir -p release
-          mv extracted_files/release release
-          zip -r release.zip release
+          mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/DroneML
+          mkdir -p DroneML
+          mv extracted_files/DroneML DroneML
+          zip -r DroneML.zip DroneML
           ls -l
           git checkout --orphan release
-          git add release.zip
+          git add DroneML.zip
           git commit -m "Add latest release ZIP with renamed folder structure"
           git push origin release --force

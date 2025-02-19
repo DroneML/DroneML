@@ -23,14 +23,14 @@ jobs:
           echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
           echo "ZIP_URL=${ZIP_URL}" >> $GITHUB_ENV
           echo "DOWNLOAD_ZIP=${DOWNLOAD_ZIP}" >> $GITHUB_ENV
-          curl -L -o "${{env.DOWNLOAD_ZIP}}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "${{ env.ZIP_URL }}"
+          curl -L -o ${env.DOWNLOAD_ZIP} -H "Authorization: token ${ secrets.GITHUB_TOKEN }" ${ env.ZIP_URL }
 
       - name: Rename Folder Structure
         run: |
-          unzip "${{ env.DOWNLOAD_ZIP }}.zip" -d extracted_files
+          unzip ${ env.DOWNLOAD_ZIP }.zip -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
-          mv "extracted_files/$ORIGINAL_FOLDER" "extracted_files/release"
+          mv extracted_files/${ORIGINAL_FOLDER} "extracted_files/release
           mkdir -p release
           mv extracted_files/release release
           zip -r release.zip release

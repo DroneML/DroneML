@@ -15,39 +15,30 @@ jobs:
         with:
           fetch-depth: 0  # Ensure we can manipulate branches
 
-      - name: Get Latest Release Info
-        id: get_release
-        run: |
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          ASSET_URL=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.assets[0].browser_download_url')
-          RELEASE_NAME=$(basename "$ASSET_URL" .zip)  # Extracts the filename without .zip
-
-          echo "LATEST_RELEASE=${LATEST_RELEASE}" >> $GITHUB_ENV
-          echo "ASSET_URL=${ASSET_URL}" >> $GITHUB_ENV
-          echo "RELEASE_NAME=${RELEASE_NAME}" >> $GITHUB_ENV
-
       - name: Download Release ZIP
         run: |
-          curl -L -o "${{ env.RELEASE_NAME }}.zip" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "${{ env.ASSET_URL }}"
+          RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          ZIP_URL=$(curl -s https://api.github.com/repos/DroneML/DroneML/releases/latest | jq -r '.zipball_url')
+          DOWNLOAD_ZIP=$(DroneML "${RELEASE_TAG}" .zip)
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> $GITHUB_ENV
+          echo "ZIP_URL=${ZIP_URL}" >> $GITHUB_ENV
+          echo "DOWNLOAD_ZIP=${DOWNLOAD_ZIP}" >> $GITHUB_ENV
+          curl -L -o "${{env.DOWNLOAD_ZIP}}" -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "${{ env.ZIP_URL }}"
 
       - name: Rename Folder Structure
         run: |
-          unzip "${{ env.RELEASE_NAME }}.zip" -d extracted_files
+          unzip "${{ env.DOWNLOAD_ZIP }}.zip" -d extracted_files
           ls -l extracted_files
           ORIGINAL_FOLDER=$(ls extracted_files)
-          NEW_FOLDER=$(echo "$ORIGINAL_FOLDER" | sed -E "s/-${{ env.LATEST_RELEASE }}//")
           mv "extracted_files/$ORIGINAL_FOLDER" "extracted_files/release"
           mkdir -p release
           mv extracted_files/release release
-          cd final_structure
-          zip -r ../release.zip *
-          cd ..
+          zip -r release.zip release
           ls -l
 
       - name: Update `release` Branch
         run: |
           git checkout --orphan release
-          git rm -rf .  # Remove all files to ensure a clean slate
           git clean -fd
           git add release.zip
           git commit -m "Add latest release ZIP with renamed folder structure"

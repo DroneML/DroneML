@@ -24,24 +24,32 @@ cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
 HTEXT_INPUT_RSASTER = "The input raster layer in your QGIS project that will be used for training the model."
 HTEXT_INPUT_POS_VEC = (
-    "The input vector layer in your QGIS project for positive labels."
+    "The input vector layer in your QGIS project for positive labels.\n"
     "Should be ploygon or multi-polygons."
 )
 HTEXT_INPUT_NEG_VEC = (
-    "The input vector layer in your QGIS project for negative labels."
+    "The input vector layer in your QGIS project for negative labels.\n"
     "Should be ploygon or multi-polygons."
 )
 HTEXT_FEATURE_TYPE = (
-    "The feature type of the input vector layer. By default FLAIR."
+    "The feature type of the input vector layer. By default FLAIR.\n"
     "IDENTITY means use the original raster layer as the feature."
 )
 HTEXT_COMPUTE_MODE = (
     "The mode of computation.\n"
     "Normal: read in all the data and perform the computation. Suitable for small datasets that fits in memory.\n"
-    "Parallel: read in data in chunks and perform the computation with several chunks together."
+    "Parallel: read in data in chunks and perform the computation with several chunks together. "
     "Suitable for medium-sized datasets, where we assume several chunks can fit in memory.\n"
-    "Safe: read in data in chunks, perform the computation with one chunk at a time."
-    "Suitable for large datasets that do not fit in memory.\n"
+    "Safe: read in data in chunks, perform the computation with one chunk at a time. "
+    "Suitable for large datasets that do not fit in memory."
+)
+HTEXT_CHUNK_SIZE = (
+    "The size of the chunk to be read in. Only used in Parallel and Safe mode."
+)
+
+HTEXT_OVERLAP_SIZE = (
+    "The overlap between chunks when performing feature extraction. Only used in Parallel and Safe mode.\n"
+    "Because of possible edge effects, a minimum overlap of 20 is recommended."
 )
 
 
@@ -105,19 +113,24 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.layout.addWidget(self.vec_negative_combo)
 
         # Add radio buttons for feature type
-        feature_label, self.feature_type_group, self.feature_type_layout = (
-            self._get_radio_buttons("Feature type:", ["FLAIR", "IDENTITY"], "FLAIR")
+        feature_label_layout, self.feature_type_group, self.feature_type_layout = (
+            self._get_radio_buttons(
+                "Feature type:", HTEXT_FEATURE_TYPE, ["FLAIR", "IDENTITY"], "FLAIR"
+            )
         )
-        self.layout.addWidget(feature_label)
+        self.layout.addLayout(feature_label_layout)
         self.layout.addLayout(self.feature_type_layout)
 
         # Add radio buttons for compute mode
-        compute_label, self.compute_mode_group, self.compute_mode_layout = (
+        compute_label_layout, self.compute_mode_group, self.compute_mode_layout = (
             self._get_radio_buttons(
-                "Compute mode:", ["Normal", "Parallel", "Safe"], "Normal"
+                "Compute mode:",
+                HTEXT_COMPUTE_MODE,
+                ["Normal", "Parallel", "Safe"],
+                "Normal",
             )
         )
-        self.layout.addWidget(compute_label)
+        self.layout.addLayout(compute_label_layout)
         self.layout.addLayout(self.compute_mode_layout)
 
         # Add a separator
@@ -201,11 +214,17 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         return label_layout, combo_box
 
-    def _get_radio_buttons(self, label_text, options, default_option):
+    def _get_radio_buttons(self, label_text, help_text, options, default_option):
         """Add a set of radio buttons with a label to the layout."""
         label = QtWidgets.QLabel(label_text)
         label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+        label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(help_text)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.addWidget(label)
+        label_layout.addWidget(help_icon)
+        label_layout.setAlignment(QtCore.Qt.AlignLeft)
         button_group = QtWidgets.QButtonGroup(self)
         layout = QtWidgets.QHBoxLayout()
         for option in options:
@@ -214,7 +233,7 @@ class DroneMLDialog(QtWidgets.QDialog):
                 radio_button.setChecked(True)
             button_group.addButton(radio_button)
             layout.addWidget(radio_button)
-        return label, button_group, layout
+        return label_layout, button_group, layout
 
     def _add_advanced_options(self):
         """Add advanced options section to the layout."""
@@ -225,19 +244,35 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.advanced_layout = QtWidgets.QVBoxLayout()
 
         # Chunk size
-        self.chunk_size_label = QtWidgets.QLabel("Chunk size:")
+        chunk_size_label = QtWidgets.QLabel("Chunk size:")
+        chunk_size_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        chunk_size_label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(HTEXT_CHUNK_SIZE)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        chunk_size_label_layout = QtWidgets.QHBoxLayout()
+        chunk_size_label_layout.addWidget(chunk_size_label)
+        chunk_size_label_layout.addWidget(help_icon)
+        chunk_size_label_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.chunk_size_spinbox = QtWidgets.QSpinBox()
         self.chunk_size_spinbox.setRange(500, 10000)
         self.chunk_size_spinbox.setValue(100)
-        self.advanced_layout.addWidget(self.chunk_size_label)
+        self.advanced_layout.addLayout(chunk_size_label_layout)
         self.advanced_layout.addWidget(self.chunk_size_spinbox)
 
         # Overlap size
-        self.overlap_size_label = QtWidgets.QLabel("Overlap size:")
+        overlap_size_label = QtWidgets.QLabel("Overlap size:")
+        overlap_size_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        overlap_size_label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(HTEXT_OVERLAP_SIZE)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        overlap_size_label_layout = QtWidgets.QHBoxLayout()
+        overlap_size_label_layout.addWidget(overlap_size_label)
+        overlap_size_label_layout.addWidget(help_icon)
+        overlap_size_label_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.overlap_size_spinbox = QtWidgets.QSpinBox()
         self.overlap_size_spinbox.setRange(0, 1000)
         self.overlap_size_spinbox.setValue(25)
-        self.advanced_layout.addWidget(self.overlap_size_label)
+        self.advanced_layout.addLayout(overlap_size_label_layout)
         self.advanced_layout.addWidget(self.overlap_size_spinbox)
 
         self.advanced_group_box.setLayout(self.advanced_layout)

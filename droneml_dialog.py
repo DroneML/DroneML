@@ -83,7 +83,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             HTEXT_INPUT_RSASTER,
             self._populate_raster_combo,
         )
-        self.layout.addWidget(raster_label_layout)
+        self.layout.addLayout(raster_label_layout)
         self.layout.addWidget(self.raster_combo)
 
         # Add positive label vector layer combo box
@@ -92,7 +92,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             HTEXT_INPUT_POS_VEC,
             self._populate_vector_combo,
         )
-        self.layout.addWidget(pos_label_layout)
+        self.layout.addLayout(pos_label_layout)
         self.layout.addWidget(self.vec_positive_combo)
 
         # Add negative label vector layer combo box
@@ -101,7 +101,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             HTEXT_INPUT_NEG_VEC,
             self._populate_vector_combo,
         )
-        self.layout.addWidget(neg_label_layout)
+        self.layout.addLayout(neg_label_layout)
         self.layout.addWidget(self.vec_negative_combo)
 
         # Add radio buttons for feature type

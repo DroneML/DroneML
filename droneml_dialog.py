@@ -20,6 +20,30 @@ HELP_ICON_SIZE = 12  # Size of the help icon
 # Get current folder
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
+# Help text
+HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
+HTEXT_INPUT_RSASTER = "The input raster layer in your QGIS project that will be used for training the model."
+HTEXT_INPUT_POS_VEC = (
+    "The input vector layer in your QGIS project for positive labels."
+    "Should be ploygon or multi-polygons."
+)
+HTEXT_INPUT_NEG_VEC = (
+    "The input vector layer in your QGIS project for negative labels."
+    "Should be ploygon or multi-polygons."
+)
+HTEXT_FEATURE_TYPE = (
+    "The feature type of the input vector layer. By default FLAIR."
+    "IDENTITY means use the original raster layer as the feature."
+)
+HTEXT_COMPUTE_MODE = (
+    "The mode of computation.\n"
+    "Normal: read in all the data and perform the computation. Suitable for small datasets that fits in memory.\n"
+    "Parallel: read in data in chunks and perform the computation with several chunks together."
+    "Suitable for medium-sized datasets, where we assume several chunks can fit in memory.\n"
+    "Safe: read in data in chunks, perform the computation with one chunk at a time."
+    "Suitable for large datasets that do not fit in memory.\n"
+)
+
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -40,7 +64,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Add input for output path of the prediction
         # Horizontal layout for output path and button
         output_label_layout, self.output_path_line_edit, browse_button = (
-            self._get_output_path_input_elements()
+            self._get_output_path_input_elements(HTEXT_OUTPUT_PATH)
         )
 
         self.layout.addLayout(output_label_layout)
@@ -54,24 +78,30 @@ class DroneMLDialog(QtWidgets.QDialog):
         self._add_separator()
 
         # Add raster layer combo box
-        raster_label, self.raster_combo = self._get_combo_box(
-            "Raster layer for training:", self._populate_raster_combo
+        raster_label_layout, self.raster_combo = self._get_combo_box(
+            "Raster layer for training:",
+            HTEXT_INPUT_RSASTER,
+            self._populate_raster_combo,
         )
-        self.layout.addWidget(raster_label)
+        self.layout.addWidget(raster_label_layout)
         self.layout.addWidget(self.raster_combo)
 
         # Add positive label vector layer combo box
-        pos_label, self.vec_positive_combo = self._get_combo_box(
-            "Vector layer for positive labels:", self._populate_vector_combo
+        pos_label_layout, self.vec_positive_combo = self._get_combo_box(
+            "Vector layer for positive labels:",
+            HTEXT_INPUT_POS_VEC,
+            self._populate_vector_combo,
         )
-        self.layout.addWidget(pos_label)
+        self.layout.addWidget(pos_label_layout)
         self.layout.addWidget(self.vec_positive_combo)
 
         # Add negative label vector layer combo box
-        neg_label, self.vec_negative_combo = self._get_combo_box(
-            "Vector layer for negative labels:", self._populate_vector_combo
+        neg_label_layout, self.vec_negative_combo = self._get_combo_box(
+            "Vector layer for negative labels:",
+            HTEXT_INPUT_NEG_VEC,
+            self._populate_vector_combo,
         )
-        self.layout.addWidget(neg_label)
+        self.layout.addWidget(neg_label_layout)
         self.layout.addWidget(self.vec_negative_combo)
 
         # Add radio buttons for feature type
@@ -124,15 +154,13 @@ class DroneMLDialog(QtWidgets.QDialog):
         if output_path[0]:
             self.output_path_line_edit.setText(output_path[0])
 
-    def _get_output_path_input_elements(self):
+    def _get_output_path_input_elements(self, help_text):
         """Elements for the output path input."""
         # Label
         output_label = QtWidgets.QLabel("Output path for prediction:")
         output_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
         output_label.setFixedHeight(LABEL_HEIGHT)
-        help_icon = _get_help_icon(
-            "Select the output path where the prediction will be saved."
-        )
+        help_icon = _get_help_icon(help_text)
         help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
         label_layout = QtWidgets.QHBoxLayout()
         label_layout.addWidget(output_label)
@@ -155,17 +183,23 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         return label_layout, output_path_line_edit, browse_button
 
-    def _get_combo_box(self, label_text, populate_function):
+    def _get_combo_box(self, label_text, help_text, populate_function):
         """Add a combo box with a label to the layout."""
         label = QtWidgets.QLabel(label_text)
         label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+        label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(help_text)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.addWidget(label)
+        label_layout.addWidget(help_icon)
+        label_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         combo_box = QtWidgets.QComboBox()
         combo_box.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
         populate_function(combo_box)
 
-        return label, combo_box
+        return label_layout, combo_box
 
     def _get_radio_buttons(self, label_text, options, default_option):
         """Add a set of radio buttons with a label to the layout."""

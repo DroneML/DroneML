@@ -1,5 +1,7 @@
 from pathlib import Path
-from qgis.PyQt import QtWidgets, QtCore
+import os
+import inspect
+from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
@@ -9,10 +11,15 @@ import logging
 logging.getLogger().setLevel(logging.CRITICAL)
 
 # Constants
-FONTSIZE = 16 # Font size for the labels
-LABEL_HEIGHT = 20 # Height of the labels
-WIDGET_WIDTH = 600 # Width of all the widgets
-WIDGET_HEIGHT = 25 # Height of all non-label widgets
+FONTSIZE = 16  # Font size for the labels
+LABEL_HEIGHT = 20  # Height of the labels
+WIDGET_WIDTH = 600  # Width of all the widgets
+WIDGET_HEIGHT = 25  # Height of all non-label widgets
+HELP_ICON_SIZE = 12  # Size of the help icon
+
+# Get current folder
+cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
+
 
 class DroneMLDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
@@ -32,14 +39,15 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Add input for output path of the prediction
         # Horizontal layout for output path and button
-        output_label, self.output_path_line_edit, browse_button = (
+        output_label_layout, self.output_path_line_edit, browse_button = (
             self._get_output_path_input_elements()
         )
-        self.layout.addWidget(output_label)
+
+        self.layout.addLayout(output_label_layout)
         self.output_path_layout = QtWidgets.QHBoxLayout()
         self.output_path_layout.addWidget(self.output_path_line_edit)
         self.output_path_layout.addWidget(browse_button)
-        self.output_path_layout.setAlignment(QtCore.Qt.AlignLeft) 
+        self.output_path_layout.setAlignment(QtCore.Qt.AlignLeft)
         self.layout.addLayout(self.output_path_layout)
 
         # Add a separator
@@ -121,7 +129,15 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Label
         output_label = QtWidgets.QLabel("Output path for prediction:")
         output_label.setStyleSheet(f"font-size: {FONTSIZE}px;")
-        output_label.setFixedSize(WIDGET_WIDTH, LABEL_HEIGHT)
+        output_label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(
+            "Select the output path where the prediction will be saved."
+        )
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.addWidget(output_label)
+        label_layout.addWidget(help_icon)
+        label_layout.setAlignment(QtCore.Qt.AlignLeft)
 
         # Get output path
         # Default output path is the parent directory of the raster layer
@@ -137,7 +153,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         browse_button.clicked.connect(self._browse_output_path)
         browse_button.setFixedSize(32, WIDGET_HEIGHT)
 
-        return output_label, output_path_line_edit, browse_button
+        return label_layout, output_path_line_edit, browse_button
 
     def _get_combo_box(self, label_text, populate_function):
         """Add a combo box with a label to the layout."""
@@ -275,6 +291,21 @@ class DroneMLDialog(QtWidgets.QDialog):
         for layer in self.qgis_layers:
             if isinstance(layer, QgsVectorLayer):
                 combo_box.addItem(layer.name())
+
+
+def _get_help_icon(text: str):
+    """Create a help button with the given text."""
+    help_icon = QtWidgets.QLabel()
+    pixmap = QtGui.QPixmap(os.path.join(cmd_folder, "help_icon.svg"))
+    scaled_pixmap = pixmap.scaled(
+        HELP_ICON_SIZE,
+        HELP_ICON_SIZE,
+        QtCore.Qt.KeepAspectRatio,
+        QtCore.Qt.SmoothTransformation,
+    )
+    help_icon.setPixmap(scaled_pixmap)
+    help_icon.setToolTip(text)
+    return help_icon
 
 
 def _sort_layers(layers):

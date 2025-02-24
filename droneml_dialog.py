@@ -5,6 +5,16 @@ from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
+from segmentmytif.utils import (
+    HTEXT_OUTPUT_PATH,
+    HTEXT_INPUT_RSASTER,
+    HTEXT_INPUT_POS_VEC,
+    HTEXT_INPUT_NEG_VEC,
+    HTEXT_FEATURE_TYPE,
+    HTEXT_COMPUTE_MODE,
+    HTEXT_CHUNK_SIZE,
+    HTEXT_OVERLAP_SIZE,
+)
 import logging
 
 # Turn off the logger
@@ -19,38 +29,6 @@ HELP_ICON_SIZE = 12  # Size of the help icon
 
 # Get current folder
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
-
-# Help text
-HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
-HTEXT_INPUT_RSASTER = "The input raster layer in your QGIS project that will be used for training the model."
-HTEXT_INPUT_POS_VEC = (
-    "The input vector layer in your QGIS project for positive labels.\n"
-    "Should be ploygon or multi-polygons."
-)
-HTEXT_INPUT_NEG_VEC = (
-    "The input vector layer in your QGIS project for negative labels.\n"
-    "Should be ploygon or multi-polygons."
-)
-HTEXT_FEATURE_TYPE = (
-    "The feature type of the input vector layer. By default FLAIR.\n"
-    "IDENTITY means use the original raster layer as the feature."
-)
-HTEXT_COMPUTE_MODE = (
-    "The mode of computation.\n"
-    "Normal: read in all the data and perform the computation. Suitable for small datasets that fits in memory.\n"
-    "Parallel: read in data in chunks and perform the computation with several chunks together. "
-    "Suitable for medium-sized datasets, where we assume several chunks can fit in memory.\n"
-    "Safe: read in data in chunks, perform the computation with one chunk at a time. "
-    "Suitable for large datasets that do not fit in memory."
-)
-HTEXT_CHUNK_SIZE = (
-    "The size of the chunk to be read in. Only used in Parallel and Safe mode."
-)
-
-HTEXT_OVERLAP_SIZE = (
-    "The overlap between chunks when performing feature extraction. Only used in Parallel and Safe mode.\n"
-    "Because of possible edge effects, a minimum overlap of 20 is recommended."
-)
 
 
 class DroneMLDialog(QtWidgets.QDialog):

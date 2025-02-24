@@ -5,7 +5,7 @@ from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
-from segmentmytif.utils import (
+from .utils import (
     HTEXT_OUTPUT_PATH,
     HTEXT_INPUT_RSASTER,
     HTEXT_INPUT_POS_VEC,
@@ -162,6 +162,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Default output path is the parent directory of the raster layer
         output_path_line_edit = QtWidgets.QLineEdit()
         output_path_line_edit.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        output_path = Path()
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
                 output_path = Path(layer.source()).parent / "prediction.tif"

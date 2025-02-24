@@ -1,6 +1,8 @@
 from pathlib import Path
 import os
+import sys
 import inspect
+import logging
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
@@ -18,10 +20,6 @@ from .utils import (
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
 )
-import logging
-
-# Turn off the logger
-logging.getLogger().setLevel(logging.CRITICAL)
 
 # Constants
 FONTSIZE = 16  # Font size for the labels
@@ -298,6 +296,30 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
 
+        # Configure logging
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
+        # Create formatter and add it to the handlers
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        # File handler INFO
+        file_handler_info = logging.FileHandler(f"{output_path.with_suffix('.info.log')}")
+        file_handler_info.setLevel(logging.DEBUG)
+        file_handler_info.setFormatter(formatter)
+        # File handler DEBUG
+        file_handler_debug = logging.FileHandler(f"{output_path.with_suffix('.debug.log')}")
+        file_handler_debug.setLevel(logging.DEBUG)
+        file_handler_debug.setFormatter(formatter)
+        # console handler
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(logging.INFO)
+        console_handler.setFormatter(formatter)
+        # Add the handlers to the logger
+        logger.addHandler(file_handler_info)
+        logger.addHandler(file_handler_debug)
+        logger.addHandler(console_handler)
+
         # Get file paths of the selected layers
         raster_path = Path(
             QgsProject.instance()
@@ -314,9 +336,9 @@ class DroneMLDialog(QtWidgets.QDialog):
             .mapLayersByName(self.vec_negative_combo.currentText())[0]
             .source()
         )
-        print(f"Raster Layer: {raster_path}")
-        print(f"Positive Vector Layer: {pos_labels_path}")
-        print(f"Negative Vector Layer: {neg_labels_path}")
+        logger.info(f"Raster Layer: {raster_path}")
+        logger.info(f"Positive Vector Layer: {pos_labels_path}")
+        logger.info(f"Negative Vector Layer: {neg_labels_path}")
 
         # Get Feature Type
         feature_type = (
@@ -324,7 +346,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             if self.feature_type_group.buttons()[0].isChecked()
             else FeatureType.IDENTITY
         )
-        print(f"Feature Type: {feature_type}")
+        logger.info(f"Feature Type: {feature_type}")
 
         # Get Compute Mode
         if self.compute_mode_group.buttons()[0].isChecked():
@@ -333,14 +355,14 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode = "parallel"
         else:
             compute_mode = "safe"
-        print(f"Compute Mode: {compute_mode}")
+        logger.info(f"Compute Mode: {compute_mode}")
 
         # Get chunk size and overlap size
         if self.advanced_group_box.isChecked():
             chunk_size = self.chunk_size_spinbox.value()
             overlap_size = self.overlap_size_spinbox.value()
-            print(f"Chunk Size: {chunk_size}")
-            print(f"Overlap Size: {overlap_size}")
+            logger.info(f"Chunk Size: {chunk_size}")
+            logger.info(f"Overlap Size: {overlap_size}")
         else:
             chunk_size = None
             overlap_size = None
@@ -359,7 +381,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Add the new raster layer to QGIS
         new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
         if not new_raster_layer.isValid():
-            print("Failed to load the raster layer!")
+            logger.error("Failed to load the raster layer!")
         else:
             QgsProject.instance().addMapLayer(new_raster_layer)
 

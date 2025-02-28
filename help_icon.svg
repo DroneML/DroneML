@@ -1,25 +1,10 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg fill="#000000" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
-	 width="800px" height="800px" viewBox="0 0 50 50" xml:space="preserve">
-<g>
-	<g>
-		<path d="M45,0H5C2.25,0,0,2.25,0,5v40c0,2.75,2.25,5,5,5h40c2.75,0,5-2.25,5-5V5C50,2.25,47.75,0,45,0z M46,45
-			c0,0.542-0.458,1-1,1H5c-0.542,0-1-0.458-1-1V5c0-0.542,0.458-1,1-1h40c0.542,0,1,0.458,1,1V45z"/>
-		<path d="M24.733,34.318c-0.936,0-1.73,0.322-2.375,0.947c-0.645,0.627-0.968,1.414-0.968,2.338c0,1.035,0.334,1.85,1,2.429
-			c0.667,0.581,1.449,0.862,2.342,0.862c0.868,0,1.631-0.297,2.295-0.881c0.656-0.582,0.988-1.395,0.988-2.41
-			c0-0.924-0.32-1.711-0.953-2.338C26.439,34.641,25.657,34.318,24.733,34.318z"/>
-		<path d="M30.896,8.772c-1.631-0.791-3.51-1.18-5.629-1.18c-2.295,0-4.294,0.473-6.005,1.401c-1.718,0.943-3.026,2.126-3.919,3.562
-			C14.45,13.978,14,15.394,14,16.787c0,0.67,0.281,1.295,0.848,1.889c0.561,0.565,1.258,0.861,2.076,0.861
-			c1.395,0,2.342-0.832,2.844-2.488c0.527-1.574,1.172-2.777,1.935-3.59c0.762-0.817,1.946-1.225,3.564-1.225
-			c1.377,0,2.502,0.406,3.375,1.205c0.871,0.813,1.31,1.802,1.31,2.98c0,0.602-0.147,1.16-0.429,1.66
-			c-0.289,0.515-0.643,0.984-1.055,1.397c-0.419,0.425-1.103,1.047-2.039,1.866c-1.072,0.941-1.922,1.743-2.548,2.428
-			c-0.632,0.686-1.138,1.464-1.522,2.382c-0.378,0.9-0.57,1.959-0.57,3.199c0,0.975,0.259,1.721,0.783,2.217
-			c0.519,0.496,1.162,0.75,1.923,0.75c1.464,0,2.334-0.768,2.62-2.293c0.161-0.713,0.28-1.211,0.358-1.506
-			c0.084-0.281,0.192-0.562,0.342-0.857c0.149-0.281,0.375-0.602,0.675-0.945c0.294-0.345,0.698-0.736,1.194-1.203
-			c1.805-1.61,3.051-2.753,3.75-3.438c0.697-0.672,1.299-1.486,1.803-2.43C35.744,18.705,36,17.609,36,16.362
-			c0-1.574-0.441-3.05-1.333-4.388C33.777,10.621,32.521,9.55,30.896,8.772z"/>
-	</g>
-</g>
-</svg>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="svg2810" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" height="480" width="480" version="1.0" xmlns:cc="http://web.resource.org/cc/" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 480 480" xmlns:dc="http://purl.org/dc/elements/1.1/"><metadata id="metadata2348"><rdf:RDF><cc:Work rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/></cc:Work></rdf:RDF></metadata><defs id="defs2836"><linearGradient id="linearGradient3850"><stop id="stop3852" stop-color="#fff" stop-opacity=".79381" offset="0"/><stop id="stop4351" stop-color="#fff" stop-opacity="0" offset=".83784"/><stop id="stop3854" stop-color="#fff" stop-opacity="0" offset="1"/></linearGradient>
+		<radialGradient id="radialGradient2351" gradientUnits="userSpaceOnUse" cy="240" cx="240" r="225"><stop id="stop6898" stop-color="#0083ff" stop-opacity="0" offset="0"/><stop id="stop6900" stop-color="#0054ff" stop-opacity=".41237" offset="1"/></radialGradient>
+		<linearGradient id="linearGradient2356" y2="311.83" gradientUnits="userSpaceOnUse" x2="452.6" y1="311.83" x1="27.401"><stop id="stop5816" stop-color="#0048cd" offset="0"/><stop id="stop5818" stop-color="#002aa0" offset="1"/></linearGradient><linearGradient id="linearGradient2359" y2="152.75" gradientUnits="userSpaceOnUse" x2="441.12" y1="152.75" x1="38.881"><stop id="stop5824" stop-color="#5e99dd" offset="0"/><stop id="stop5826" stop-color="#0461c9" offset="1"/></linearGradient>
+		<radialGradient id="radialGradient2376" xlink:href="#linearGradient3850" gradientUnits="userSpaceOnUse" cy="167.5" cx="196.07" gradientTransform="matrix(-.56790 -1.4348 1.4011 -.55456 -81.877 420.14)" r="240"/><radialGradient id="radialGradient2379" xlink:href="#linearGradient3850" gradientUnits="userSpaceOnUse" cy="240" cx="240" r="240"/></defs>
+		<path id="path2818" fill="#003fc0" d="m240 0c-132.34 0-240 107.66-240 240s107.66 240 240 240 240-107.66 240-240-107.66-240-240-240z"/><path id="path2820" fill="#649efa" d="m465 240c0 124.07-100.93 225-225 225s-225-100.93-225-225 100.93-225 225-225 225 100.93 225 225z"/>
+	<path id="path2826" d="m240 278.09c78.17 0 145.31-44.43 201.12-107.03-28.7-83.491-108.01-143.66-201.12-143.66-93.11 0.001-172.42 60.169-201.12 143.66 55.81 62.6 122.95 107.03 201.12 107.03z" fill="url(#linearGradient2359)"/><path id="path2828" d="m240 278.09c-78.17 0-145.31-44.43-201.12-107.03-7.433 21.63-11.479 44.82-11.479 68.94 0 117.23 95.369 212.6 212.6 212.6s212.6-95.37 212.6-212.6c0-24.12-4.05-47.31-11.48-68.94-55.81 62.6-122.95 107.03-201.12 107.03z" fill="url(#linearGradient2356)"/><g id="layer4"><path id="path3848" d="m465 240c0 124.07-100.93 225-225 225s-225-100.93-225-225 100.93-225 225-225 225 100.93 225 225z" fill-rule="evenodd" fill="url(#radialGradient2376)"/></g><g id="layer3"><path id="path3846" d="m240 0c-132.34 0-240 107.66-240 240s107.66 240 240 240 240-107.66 240-240-107.66-240-240-240z" fill-rule="evenodd" fill="url(#radialGradient2379)"/></g><g id="layer1"><path id="path6894" d="m465 240c0 124.07-100.93 225-225 225s-225-100.93-225-225 100.93-225 225-225 225 100.93 225 225z" fill-rule="evenodd" fill="url(#radialGradient2351)"/></g><g id="layer2"><g id="g2831" stroke="#0064d4">
+				<path id="path2833" d="m203.24 253.14c0-30.39-1-30.89-28.9-34.38v-16.94h107.12v157.94c0 28.4 2.49 30.89 28.9 33.88v19.43h-136.02v-19.43c26.41-2.99 28.9-5.48 28.9-33.88v-106.62zm81.21-136.52c0 23.92-18.93 43.35-43.35 43.35-23.41 0-43.34-19.43-43.34-43.35 0-24.408 19.93-43.341 43.34-43.341 24.42 0 43.35 18.933 43.35 43.341z" stroke="#0064d4" stroke-width="5" fill="#fff"/>
+			</g></g></svg>

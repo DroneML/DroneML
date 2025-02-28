@@ -12,6 +12,9 @@ from .utils import (
     HTEXT_INPUT_NEG_VEC,
     HTEXT_FEATURE_TYPE,
     HTEXT_COMPUTE_MODE,
+    HTEXT_COMPUTE_MODE_NORMAL,
+    HTEXT_COMPUTE_MODE_PARALLEL,
+    HTEXT_COMPUTE_MODE_SAFE,
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
 )
@@ -101,10 +104,15 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Add radio buttons for compute mode
         compute_label_layout, self.compute_mode_group, self.compute_mode_layout = (
-            self._get_radio_buttons(
+            self._get_radio_buttons_with_helptext(
                 "Compute mode:",
                 HTEXT_COMPUTE_MODE,
                 ["Normal", "Parallel", "Safe"],
+                [
+                    HTEXT_COMPUTE_MODE_NORMAL,
+                    HTEXT_COMPUTE_MODE_PARALLEL,
+                    HTEXT_COMPUTE_MODE_SAFE,
+                ],
                 "Normal",
             )
         )
@@ -193,8 +201,11 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         return label_layout, combo_box
 
-    def _get_radio_buttons(self, label_text, help_text, options, default_option):
+    def _get_radio_buttons(
+        self, label_text, help_text, options, default_option, option_texts=None
+    ):
         """Add a set of radio buttons with a label to the layout."""
+        # Label text and help icon next to it
         label = QtWidgets.QLabel(label_text)
         label.setStyleSheet(f"font-size: {FONTSIZE}px;")
         label.setFixedHeight(LABEL_HEIGHT)
@@ -212,6 +223,30 @@ class DroneMLDialog(QtWidgets.QDialog):
                 radio_button.setChecked(True)
             button_group.addButton(radio_button)
             layout.addWidget(radio_button)
+        return label_layout, button_group, layout
+
+    def _get_radio_buttons_with_helptext(
+        self, label_text, help_text, options, option_texts, default_option
+    ):
+        """Add a set of radio buttons with a label to the layout, and help text for each option."""
+        # Label text and help icon next to it
+        label = QtWidgets.QLabel(label_text)
+        label.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label.setFixedHeight(LABEL_HEIGHT)
+        help_icon = _get_help_icon(help_text)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        label_layout = QtWidgets.QHBoxLayout()
+        label_layout.addWidget(label)
+        label_layout.addWidget(help_icon)
+        label_layout.setAlignment(QtCore.Qt.AlignLeft)
+        button_group = QtWidgets.QButtonGroup(self)
+        layout = QtWidgets.QHBoxLayout()
+        for option, op_help_text in zip(options, option_texts):
+            radio_button_with_help = RadioButtonWithHelp(option, op_help_text)
+            if option == default_option:
+                radio_button_with_help.radio_button.setChecked(True)
+            button_group.addButton(radio_button_with_help.radio_button)
+            layout.addWidget(radio_button_with_help)
         return label_layout, button_group, layout
 
     def _add_advanced_options(self):
@@ -372,3 +407,18 @@ def _sort_layers(layers):
     # Combine active layers first, then inactive layers
     sorted_layers = active_layers + inactive_layers
     return sorted_layers
+
+class RadioButtonWithHelp(QtWidgets.QWidget):
+    """A widget that contains a radio button and a help icon."""
+    def __init__(self, text, help_text, parent=None):
+        super().__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+        self.radio_button = QtWidgets.QRadioButton(text)
+        help_icon = _get_help_icon(help_text)
+        help_icon.setFixedSize(HELP_ICON_SIZE, HELP_ICON_SIZE)
+        layout.addWidget(self.radio_button)
+        layout.addWidget(help_icon)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(QtCore.Qt.AlignLeft)
+        self.setLayout(layout)
+        self.setFixedHeight(LABEL_HEIGHT)

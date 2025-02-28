@@ -3,11 +3,11 @@ HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
 HTEXT_INPUT_RSASTER = "The input raster layer in your QGIS project that will be used for training the model."
 HTEXT_INPUT_POS_VEC = (
     "The input vector layer in your QGIS project for positive labels.\n"
-    "Should be ploygon or multi-polygons."
+    "Should be polygon or multi-polygons."
 )
 HTEXT_INPUT_NEG_VEC = (
     "The input vector layer in your QGIS project for negative labels.\n"
-    "Should be ploygon or multi-polygons."
+    "Should be polygon or multi-polygons."
 )
 HTEXT_FEATURE_TYPE = (
     "The feature type of the input vector layer. By default FLAIR.\n"

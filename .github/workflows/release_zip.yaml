@@ -38,8 +38,7 @@ jobs:
           ORIGINAL_FOLDER=$(ls extracted_files)
           mv extracted_files/${ORIGINAL_FOLDER} extracted_files/DroneML
           ls -l extracted_files
-          mkdir -p DroneML
-          mv extracted_files/DroneML DroneML
+          mv extracted_files/DroneML .
           ls -l .
           ls -l DroneML
           zip -r DroneML.zip DroneML

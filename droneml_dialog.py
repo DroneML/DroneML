@@ -18,7 +18,7 @@ from .utils import (
     HTEXT_COMPUTE_MODE_SAFE,
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
-    QgisLogHandler
+    QgisLogHandler,
 )
 
 # Constants
@@ -294,31 +294,10 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Run the classification algorithm."""
 
         # Configure logger
-        logger = logging.getLogger(__name__)
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        # QGIS log handler
-        qgis_handler = QgisLogHandler()
-        qgis_handler.setLevel(logging.INFO)
-        qgis_handler.setFormatter(formatter)
-        logger.addHandler(qgis_handler)
+        logger = self._get_logger()
+        
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
-        # File handler INFO
-        file_handler_info = logging.FileHandler(
-            f"{output_path.with_suffix('.info.log')}"
-        )
-        file_handler_info.setLevel(logging.INFO)
-        file_handler_info.setFormatter(formatter)
-        # File handler DEBUG
-        file_handler_debug = logging.FileHandler(
-            f"{output_path.with_suffix('.debug.log')}"
-        )
-        file_handler_debug.setLevel(logging.DEBUG)
-        file_handler_debug.setFormatter(formatter)
-
-        # Add the handlers to the logger
-        logger.addHandler(file_handler_info)
-        logger.addHandler(file_handler_debug)
 
         # Get file paths of the selected layers
         raster_path = Path(
@@ -385,6 +364,41 @@ class DroneMLDialog(QtWidgets.QDialog):
             logger.error("Failed to load the raster layer!")
         else:
             QgsProject.instance().addMapLayer(new_raster_layer)
+
+    def _get_logger(self):
+        # Configure logger
+        logger = logging.getLogger(__name__)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        # QGIS log handler
+        qgis_handler = QgisLogHandler()
+        qgis_handler.setLevel(logging.INFO)
+        qgis_handler.setFormatter(formatter)
+        logger.addHandler(qgis_handler)
+
+        # Get the output path
+        output_path = Path(self.output_path_line_edit.text())
+
+        # File handler INFO
+        file_handler_info = logging.FileHandler(
+            f"{output_path.with_suffix('.info.log')}"
+        )
+        file_handler_info.setLevel(logging.INFO)
+        file_handler_info.setFormatter(formatter)
+
+        # File handler DEBUG
+        file_handler_debug = logging.FileHandler(
+            f"{output_path.with_suffix('.debug.log')}"
+        )
+        file_handler_debug.setLevel(logging.DEBUG)
+        file_handler_debug.setFormatter(formatter)
+
+        # Add the handlers to the logger
+        logger.addHandler(file_handler_info)
+        logger.addHandler(file_handler_debug)
+
+        return logger
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""

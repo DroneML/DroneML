@@ -19,6 +19,7 @@ from .utils import (
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
     QgisLogHandler,
+    DialogLoggerHandler,
 )
 
 # Constants
@@ -132,6 +133,13 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Add the button layout to the main layout
         self.layout.addLayout(button_layout)
+
+        # Add log window
+        self.log_window_handler = DialogLoggerHandler(self)
+        self.log_window_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        self.layout.addWidget(self.log_window_handler.widget)
 
         # Set the layout to the dialog
         self.layout.setSpacing(0)
@@ -295,7 +303,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Configure logger
         logger = self._get_logger()
-        
+
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
 
@@ -375,7 +383,6 @@ class DroneMLDialog(QtWidgets.QDialog):
         qgis_handler = QgisLogHandler()
         qgis_handler.setLevel(logging.INFO)
         qgis_handler.setFormatter(formatter)
-        logger.addHandler(qgis_handler)
 
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
@@ -395,8 +402,10 @@ class DroneMLDialog(QtWidgets.QDialog):
         file_handler_debug.setFormatter(formatter)
 
         # Add the handlers to the logger
+        logger.addHandler(qgis_handler)
         logger.addHandler(file_handler_info)
         logger.addHandler(file_handler_debug)
+        logger.addHandler(self.log_window_handler)
 
         return logger
 

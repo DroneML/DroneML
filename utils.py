@@ -1,5 +1,6 @@
 import logging
 from qgis.core import QgsMessageLog, Qgis
+from qgis.PyQt import QtWidgets
 
 # Help text for the dialog
 HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
@@ -46,3 +47,13 @@ class QgisLogHandler(logging.Handler):
     def emit(self, record):
         msg = self.format(record)
         QgsMessageLog.logMessage(msg, "DroneML", Qgis.Info)
+
+class DialogLoggerHandler(logging.Handler):
+    def __init__(self, parent):
+        super().__init__()
+        self.widget = QtWidgets.QPlainTextEdit(parent)
+        self.widget.setReadOnly(True)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.widget.appendPlainText(msg)

@@ -2,8 +2,8 @@
 name=DroneML
 qgisMinimumVersion=3.3
 description=This is a plugin for Drone Machine Learning study.
-version=0.1
+version=0.1.1
 author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
-email=m.dekleijn@esciencecenter.nl
+email=c.meijer@esciencecenter.nl
 category=Analysis
 plugin_dependencies=geopandas,rioxarray,scikit-learn,dask

@@ -19,7 +19,7 @@ Restart QGIS for the installation of the dependencies (step 1) to take effect.
 
 ### Step 3: Install DroneML plugin from ZIP
 
-Download the ZIP file of DroneML from [this page](https://github.com/DroneML/DroneML/blob/release/DroneML.zip).
+Download the ZIP file of DroneML from [this link](https://raw.githubusercontent.com/DroneML/DroneML/release/DroneML.zip).
 
 Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file.
 

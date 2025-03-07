@@ -1,17 +1,4 @@
-import sys
 import logging
-
-# Configure logger
-# Segmentmytif needs to take this logger
-# We need to configure it before importing segmentmytif
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-console_handler = logging.StreamHandler(sys.stdout)
-console_handler.setLevel(logging.INFO)
-console_handler.setFormatter(formatter)
-logger.addHandler(console_handler)
-
 from pathlib import Path
 import os
 import inspect
@@ -31,6 +18,7 @@ from .utils import (
     HTEXT_COMPUTE_MODE_SAFE,
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
+    QgisLogHandler
 )
 
 # Constants
@@ -305,14 +293,21 @@ class DroneMLDialog(QtWidgets.QDialog):
     def run_classification(self):
         """Run the classification algorithm."""
 
+        # Configure logger
+        logger = logging.getLogger(__name__)
+        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        # QGIS log handler
+        qgis_handler = QgisLogHandler()
+        qgis_handler.setLevel(logging.INFO)
+        qgis_handler.setFormatter(formatter)
+        logger.addHandler(qgis_handler)
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
-
         # File handler INFO
         file_handler_info = logging.FileHandler(
             f"{output_path.with_suffix('.info.log')}"
         )
-        file_handler_info.setLevel(logging.DEBUG)
+        file_handler_info.setLevel(logging.INFO)
         file_handler_info.setFormatter(formatter)
         # File handler DEBUG
         file_handler_debug = logging.FileHandler(
@@ -381,6 +376,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode=compute_mode,
             chunks=chunk_size,
             chunk_overlap=overlap_size,
+            logger_root=logger,
         )
 
         # Add the new raster layer to QGIS

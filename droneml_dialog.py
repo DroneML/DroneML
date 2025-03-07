@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import inspect
 from qgis.PyQt import QtWidgets, QtCore, QtGui
+from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
@@ -26,7 +27,7 @@ from .utils import (
 FONTSIZE = 16  # Font size for the labels
 LABEL_HEIGHT = 20  # Height of the labels
 WIDGET_WIDTH = 600  # Width of all the widgets
-WIDGET_HEIGHT = 25  # Height of all non-label widgets
+WIDGET_HEIGHT = 20  # Height of all non-label widgets
 HELP_ICON_SIZE = 12  # Size of the help icon
 
 # Get current folder
@@ -40,7 +41,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
-        self.resize(800, 650)
+        self.resize(800, 700)
 
         # Get Qgis Layers
         self.qgis_layers = QgsProject.instance().mapLayers().values()
@@ -127,12 +128,15 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Add run button
         button_layout = QtWidgets.QHBoxLayout()
         run_button = QtWidgets.QPushButton("run")
-        run_button.clicked.connect(self.run_classification)
+        run_button.clicked.connect(self.start_classification)
         run_button.setFixedSize(64, 32)
         button_layout.addWidget(run_button)
 
         # Add the button layout to the main layout
         self.layout.addLayout(button_layout)
+
+        # Add a separator
+        self._add_separator()
 
         # Add log window
         self.log_window_handler = DialogLoggerHandler(self)
@@ -142,8 +146,11 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.layout.addWidget(self.log_window_handler.widget)
 
         # Set the layout to the dialog
-        self.layout.setSpacing(0)
+        self.layout.setSpacing(5)
         self.setLayout(self.layout)
+
+        # Initialize the job thread
+        self.job = None
 
     def _add_separator(self):
         """Add a separator to the layout."""
@@ -409,6 +416,23 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         return logger
 
+    def start_classification(self):
+        """Start the classification process in a separate thread."""
+        self.job = ClassificationJob(self)
+        self.job.log_signal.connect(self.log_message)
+        self.job.start()
+
+    def closeEvent(self, event):
+        """Handle the dialog close event."""
+        if self.job and self.job.isRunning():
+            self.job.terminate()
+            self.job.wait()
+        event.accept()
+
+    def log_message(self, message):
+        """Log a message to the log window."""
+        self.log_window_handler.widget.appendPlainText(message)
+
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
         for layer in self.qgis_layers:
@@ -470,3 +494,18 @@ class RadioButtonWithHelp(QtWidgets.QWidget):
         layout.setAlignment(QtCore.Qt.AlignLeft)
         self.setLayout(layout)
         self.setFixedHeight(LABEL_HEIGHT)
+
+
+class ClassificationJob(QThread):
+    log_signal = pyqtSignal(str)
+
+    def __init__(self, dialog):
+        super().__init__()
+        self.dialog = dialog
+        self.mutex = QMutex()
+
+    def run(self):
+        try:
+            self.dialog.run_classification()
+        except Exception as e:
+            self.log_signal.emit(f"Error: {str(e)}")

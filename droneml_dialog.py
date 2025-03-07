@@ -1,8 +1,20 @@
+import sys
+import logging
+
+# Configure logger
+# Segmentmytif needs to take this logger
+# We need to configure it before importing segmentmytif
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+console_handler = logging.StreamHandler(sys.stdout)
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
 from pathlib import Path
 import os
-import sys
 import inspect
-import logging
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
@@ -296,29 +308,22 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
 
-        # Configure logging
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.INFO)
-        # Create formatter and add it to the handlers
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
         # File handler INFO
-        file_handler_info = logging.FileHandler(f"{output_path.with_suffix('.info.log')}")
+        file_handler_info = logging.FileHandler(
+            f"{output_path.with_suffix('.info.log')}"
+        )
         file_handler_info.setLevel(logging.DEBUG)
         file_handler_info.setFormatter(formatter)
         # File handler DEBUG
-        file_handler_debug = logging.FileHandler(f"{output_path.with_suffix('.debug.log')}")
+        file_handler_debug = logging.FileHandler(
+            f"{output_path.with_suffix('.debug.log')}"
+        )
         file_handler_debug.setLevel(logging.DEBUG)
         file_handler_debug.setFormatter(formatter)
-        # console handler
-        console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.INFO)
-        console_handler.setFormatter(formatter)
+
         # Add the handlers to the logger
         logger.addHandler(file_handler_info)
         logger.addHandler(file_handler_debug)
-        logger.addHandler(console_handler)
 
         # Get file paths of the selected layers
         raster_path = Path(
@@ -430,8 +435,10 @@ def _sort_layers(layers):
     sorted_layers = active_layers + inactive_layers
     return sorted_layers
 
+
 class RadioButtonWithHelp(QtWidgets.QWidget):
     """A widget that contains a radio button and a help icon."""
+
     def __init__(self, text, help_text, parent=None):
         super().__init__(parent)
         layout = QtWidgets.QHBoxLayout(self)

@@ -1,3 +1,7 @@
+import logging
+from qgis.core import QgsMessageLog, Qgis
+from qgis.PyQt import QtWidgets
+
 # Help text for the dialog
 HTEXT_OUTPUT_PATH = "The output path where the prediction will be saved."
 HTEXT_INPUT_RSASTER = "The input raster layer in your QGIS project that will be used for training the model."
@@ -33,3 +37,23 @@ HTEXT_OVERLAP_SIZE = (
     "The overlap between chunks when performing feature extraction. Only used in Parallel and Safe mode.\n"
     "Because of possible edge effects, a minimum overlap of 20 is recommended."
 )
+
+
+# Custom logging handler for QGIS
+class QgisLogHandler(logging.Handler):
+    def __init__(self):
+        super().__init__()
+
+    def emit(self, record):
+        msg = self.format(record)
+        QgsMessageLog.logMessage(msg, "DroneML", Qgis.Info)
+
+class DialogLoggerHandler(logging.Handler):
+    def __init__(self, parent):
+        super().__init__()
+        self.widget = QtWidgets.QPlainTextEdit(parent)
+        self.widget.setReadOnly(True)
+
+    def emit(self, record):
+        msg = self.format(record)
+        self.widget.appendPlainText(msg)

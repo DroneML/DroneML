@@ -34,7 +34,7 @@ With the following input fields:
 - Output Path for prediction: The output path for the prediction result.
 - Raster layer for training: The input raster layer in your QGIS project that will be used for training the model.
 - Vector layer for positive/negative labels: The input vector layer in your QGIS project for positive/negative labels. Should be ploygon or multi-polygons.
--Feature type: The feature type of the input vector layer. By default "FLAIR". "IDENTITY" means use the original raster layer as the feature.
+- Feature type: The feature type of the input vector layer. By default "FLAIR". "IDENTITY" means use the original raster layer as the feature.
 - Compute mode: The mode of computation.
   - "Normal": read in all the data and perform the computation. Suitable for small datasets that fits in memory.
   - "Parallel": read in data in chunks and perform the computation with several chunks together. Suitable for medium-sized datasets, where we assume several chunks can fit in memory.

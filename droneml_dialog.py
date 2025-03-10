@@ -389,6 +389,8 @@ class DroneMLDialog(QtWidgets.QDialog):
         else:
             QgsProject.instance().addMapLayer(new_raster_layer)
 
+        self.logger.info("Classification completed successfully!")
+
     def _get_logger(self):
         # Configure logger
         logger = logging.getLogger(__name__)

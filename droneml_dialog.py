@@ -439,13 +439,18 @@ class DroneMLDialog(QtWidgets.QDialog):
     def closeEvent(self, event):
         """Handle the dialog close event."""
         if self.job and self.job.isRunning():
+            self.job.log_signal.disconnect(self.log_message)
             self.job.terminate()
             self.job.wait()
         event.accept()
         
         # Close the logger
         if self.logger is not None:
-            del self.logger
+            handlers = self.logger.handlers[:]
+            for handler in handlers:
+                handler.close()
+                self.logger.removeHandler(handler)
+            del self.logger # Delete the logger, segmentmytif made it global
 
     def log_message(self, message):
         """Log a message to the log window."""

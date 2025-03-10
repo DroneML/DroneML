@@ -183,6 +183,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Default output path is the parent directory of the raster layer
         output_path_line_edit = QtWidgets.QLineEdit()
         output_path_line_edit.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        output_path_line_edit.setStyleSheet(f"font-size: {FONTSIZE}px;")
         output_path = Path()
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
@@ -210,6 +211,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         combo_box = QtWidgets.QComboBox()
         combo_box.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        combo_box.setStyleSheet(f"font-size: {FONTSIZE}px;")
         populate_function(combo_box)
 
         return label_layout, combo_box
@@ -234,6 +236,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             radio_button = QtWidgets.QRadioButton(option)
             if option == default_option:
                 radio_button.setChecked(True)
+            radio_button.setStyleSheet(f"font-size: {FONTSIZE}px;")
             button_group.addButton(radio_button)
             layout.addWidget(radio_button)
         return label_layout, button_group, layout
@@ -258,6 +261,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             radio_button_with_help = RadioButtonWithHelp(option, op_help_text)
             if option == default_option:
                 radio_button_with_help.radio_button.setChecked(True)
+            radio_button_with_help.setStyleSheet(f"font-size: {FONTSIZE}px;")
             button_group.addButton(radio_button_with_help.radio_button)
             layout.addWidget(radio_button_with_help)
         return label_layout, button_group, layout
@@ -283,6 +287,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.chunk_size_spinbox = QtWidgets.QSpinBox()
         self.chunk_size_spinbox.setRange(500, 10000)
         self.chunk_size_spinbox.setValue(100)
+        self.chunk_size_spinbox.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.advanced_layout.addLayout(chunk_size_label_layout)
         self.advanced_layout.addWidget(self.chunk_size_spinbox)
 
@@ -299,6 +304,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.overlap_size_spinbox = QtWidgets.QSpinBox()
         self.overlap_size_spinbox.setRange(0, 1000)
         self.overlap_size_spinbox.setValue(25)
+        self.overlap_size_spinbox.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.advanced_layout.addLayout(overlap_size_label_layout)
         self.advanced_layout.addWidget(self.overlap_size_spinbox)
 

@@ -315,7 +315,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Run the classification algorithm."""
 
         # Configure logger
-        logger = self._get_logger()
+        self.logger = self._get_logger()
 
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
@@ -336,9 +336,9 @@ class DroneMLDialog(QtWidgets.QDialog):
             .mapLayersByName(self.vec_negative_combo.currentText())[0]
             .source()
         )
-        logger.info(f"Raster Layer: {raster_path}")
-        logger.info(f"Positive Vector Layer: {pos_labels_path}")
-        logger.info(f"Negative Vector Layer: {neg_labels_path}")
+        self.logger.info(f"Raster Layer: {raster_path}")
+        self.logger.info(f"Positive Vector Layer: {pos_labels_path}")
+        self.logger.info(f"Negative Vector Layer: {neg_labels_path}")
 
         # Get Feature Type
         feature_type = (
@@ -346,7 +346,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             if self.feature_type_group.buttons()[0].isChecked()
             else FeatureType.IDENTITY
         )
-        logger.info(f"Feature Type: {feature_type}")
+        self.logger.info(f"Feature Type: {feature_type}")
 
         # Get Compute Mode
         if self.compute_mode_group.buttons()[0].isChecked():
@@ -355,14 +355,14 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode = "parallel"
         else:
             compute_mode = "safe"
-        logger.info(f"Compute Mode: {compute_mode}")
+        self.logger.info(f"Compute Mode: {compute_mode}")
 
         # Get chunk size and overlap size
         if self.advanced_group_box.isChecked():
             chunk_size = self.chunk_size_spinbox.value()
             overlap_size = self.overlap_size_spinbox.value()
-            logger.info(f"Chunk Size: {chunk_size}")
-            logger.info(f"Overlap Size: {overlap_size}")
+            self.logger.info(f"Chunk Size: {chunk_size}")
+            self.logger.info(f"Overlap Size: {overlap_size}")
         else:
             chunk_size = None
             overlap_size = None
@@ -376,13 +376,13 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode=compute_mode,
             chunks=chunk_size,
             chunk_overlap=overlap_size,
-            logger_root=logger,
+            logger_root=self.logger,
         )
 
         # Add the new raster layer to QGIS
         new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
         if not new_raster_layer.isValid():
-            logger.error("Failed to load the raster layer!")
+            self.logger.error("Failed to load the raster layer!")
         else:
             QgsProject.instance().addMapLayer(new_raster_layer)
 
@@ -434,6 +434,9 @@ class DroneMLDialog(QtWidgets.QDialog):
             self.job.terminate()
             self.job.wait()
         event.accept()
+        
+        # Close the logger
+        del self.logger
 
     def log_message(self, message):
         """Log a message to the log window."""

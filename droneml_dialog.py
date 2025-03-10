@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 import os
 import inspect
 from qgis.PyQt import QtWidgets, QtCore, QtGui
+from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
@@ -17,17 +19,15 @@ from .utils import (
     HTEXT_COMPUTE_MODE_SAFE,
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
+    QgisLogHandler,
+    DialogLoggerHandler,
 )
-import logging
-
-# Turn off the logger
-logging.getLogger().setLevel(logging.CRITICAL)
 
 # Constants
 FONTSIZE = 16  # Font size for the labels
 LABEL_HEIGHT = 20  # Height of the labels
 WIDGET_WIDTH = 600  # Width of all the widgets
-WIDGET_HEIGHT = 25  # Height of all non-label widgets
+WIDGET_HEIGHT = 20  # Height of all non-label widgets
 HELP_ICON_SIZE = 12  # Size of the help icon
 
 # Get current folder
@@ -39,9 +39,12 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Constructor."""
         super(DroneMLDialog, self).__init__(parent)
 
+        # Init a logger
+        self.logger = None
+
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
-        self.resize(800, 650)
+        self.resize(800, 700)
 
         # Get Qgis Layers
         self.qgis_layers = QgsProject.instance().mapLayers().values()
@@ -126,18 +129,31 @@ class DroneMLDialog(QtWidgets.QDialog):
         self._add_advanced_options()
 
         # Add run button
-        button_layout = QtWidgets.QHBoxLayout()
-        run_button = QtWidgets.QPushButton("run")
-        run_button.clicked.connect(self.run_classification)
-        run_button.setFixedSize(64, 32)
-        button_layout.addWidget(run_button)
+        self.button_layout = QtWidgets.QHBoxLayout()
+        self.run_button = QtWidgets.QPushButton("run")
+        self.run_button.clicked.connect(self.start_classification)
+        self.run_button.setFixedSize(64, 32)
+        self.button_layout.addWidget(self.run_button)
 
         # Add the button layout to the main layout
-        self.layout.addLayout(button_layout)
+        self.layout.addLayout(self.button_layout)
+
+        # Add a separator
+        self._add_separator()
+
+        # Add log window
+        self.log_window_handler = DialogLoggerHandler(self)
+        self.log_window_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        self.layout.addWidget(self.log_window_handler.widget)
 
         # Set the layout to the dialog
-        self.layout.setSpacing(0)
+        self.layout.setSpacing(5)
         self.setLayout(self.layout)
+
+        # Initialize the job thread
+        self.job = None
 
     def _add_separator(self):
         """Add a separator to the layout."""
@@ -170,6 +186,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Default output path is the parent directory of the raster layer
         output_path_line_edit = QtWidgets.QLineEdit()
         output_path_line_edit.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        output_path_line_edit.setStyleSheet(f"font-size: {FONTSIZE}px;")
         output_path = Path()
         for layer in self.qgis_layers:
             if isinstance(layer, QgsRasterLayer):
@@ -197,6 +214,7 @@ class DroneMLDialog(QtWidgets.QDialog):
 
         combo_box = QtWidgets.QComboBox()
         combo_box.setFixedSize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        combo_box.setStyleSheet(f"font-size: {FONTSIZE}px;")
         populate_function(combo_box)
 
         return label_layout, combo_box
@@ -221,6 +239,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             radio_button = QtWidgets.QRadioButton(option)
             if option == default_option:
                 radio_button.setChecked(True)
+            radio_button.setStyleSheet(f"font-size: {FONTSIZE}px;")
             button_group.addButton(radio_button)
             layout.addWidget(radio_button)
         return label_layout, button_group, layout
@@ -245,6 +264,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             radio_button_with_help = RadioButtonWithHelp(option, op_help_text)
             if option == default_option:
                 radio_button_with_help.radio_button.setChecked(True)
+            radio_button_with_help.setStyleSheet(f"font-size: {FONTSIZE}px;")
             button_group.addButton(radio_button_with_help.radio_button)
             layout.addWidget(radio_button_with_help)
         return label_layout, button_group, layout
@@ -270,6 +290,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.chunk_size_spinbox = QtWidgets.QSpinBox()
         self.chunk_size_spinbox.setRange(500, 10000)
         self.chunk_size_spinbox.setValue(100)
+        self.chunk_size_spinbox.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.advanced_layout.addLayout(chunk_size_label_layout)
         self.advanced_layout.addWidget(self.chunk_size_spinbox)
 
@@ -286,6 +307,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.overlap_size_spinbox = QtWidgets.QSpinBox()
         self.overlap_size_spinbox.setRange(0, 1000)
         self.overlap_size_spinbox.setValue(25)
+        self.overlap_size_spinbox.setStyleSheet(f"font-size: {FONTSIZE}px;")
         self.advanced_layout.addLayout(overlap_size_label_layout)
         self.advanced_layout.addWidget(self.overlap_size_spinbox)
 
@@ -294,6 +316,9 @@ class DroneMLDialog(QtWidgets.QDialog):
 
     def run_classification(self):
         """Run the classification algorithm."""
+
+        # Configure logger
+        self.logger = self._get_logger()
 
         # Get the output path
         output_path = Path(self.output_path_line_edit.text())
@@ -314,9 +339,9 @@ class DroneMLDialog(QtWidgets.QDialog):
             .mapLayersByName(self.vec_negative_combo.currentText())[0]
             .source()
         )
-        print(f"Raster Layer: {raster_path}")
-        print(f"Positive Vector Layer: {pos_labels_path}")
-        print(f"Negative Vector Layer: {neg_labels_path}")
+        self.logger.info(f"Raster Layer: {raster_path}")
+        self.logger.info(f"Positive Vector Layer: {pos_labels_path}")
+        self.logger.info(f"Negative Vector Layer: {neg_labels_path}")
 
         # Get Feature Type
         feature_type = (
@@ -324,7 +349,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             if self.feature_type_group.buttons()[0].isChecked()
             else FeatureType.IDENTITY
         )
-        print(f"Feature Type: {feature_type}")
+        self.logger.info(f"Feature Type: {feature_type}")
 
         # Get Compute Mode
         if self.compute_mode_group.buttons()[0].isChecked():
@@ -333,14 +358,14 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode = "parallel"
         else:
             compute_mode = "safe"
-        print(f"Compute Mode: {compute_mode}")
+        self.logger.info(f"Compute Mode: {compute_mode}")
 
         # Get chunk size and overlap size
         if self.advanced_group_box.isChecked():
             chunk_size = self.chunk_size_spinbox.value()
             overlap_size = self.overlap_size_spinbox.value()
-            print(f"Chunk Size: {chunk_size}")
-            print(f"Overlap Size: {overlap_size}")
+            self.logger.info(f"Chunk Size: {chunk_size}")
+            self.logger.info(f"Overlap Size: {overlap_size}")
         else:
             chunk_size = None
             overlap_size = None
@@ -354,14 +379,82 @@ class DroneMLDialog(QtWidgets.QDialog):
             compute_mode=compute_mode,
             chunks=chunk_size,
             chunk_overlap=overlap_size,
+            logger_root=self.logger,
         )
 
         # Add the new raster layer to QGIS
         new_raster_layer = QgsRasterLayer(prediction_tif.as_posix(), "prediction")
         if not new_raster_layer.isValid():
-            print("Failed to load the raster layer!")
+            self.logger.error("Failed to load the raster layer!")
         else:
             QgsProject.instance().addMapLayer(new_raster_layer)
+
+        self.logger.info("Classification completed successfully!")
+
+    def _get_logger(self):
+        # Configure logger
+        logger = logging.getLogger(__name__)
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
+        # QGIS log handler
+        qgis_handler = QgisLogHandler()
+        qgis_handler.setLevel(logging.INFO)
+        qgis_handler.setFormatter(formatter)
+
+        # Get the output path
+        output_path = Path(self.output_path_line_edit.text())
+
+        # File handler INFO
+        file_handler_info = logging.FileHandler(
+            f"{output_path.with_suffix('.info.log')}"
+        )
+        file_handler_info.setLevel(logging.INFO)
+        file_handler_info.setFormatter(formatter)
+
+        # File handler DEBUG
+        file_handler_debug = logging.FileHandler(
+            f"{output_path.with_suffix('.debug.log')}"
+        )
+        file_handler_debug.setLevel(logging.DEBUG)
+        file_handler_debug.setFormatter(formatter)
+
+        # Add the handlers to the logger
+        logger.addHandler(qgis_handler)
+        logger.addHandler(file_handler_info)
+        logger.addHandler(file_handler_debug)
+        logger.addHandler(self.log_window_handler)
+
+        return logger
+
+    def start_classification(self):
+        """Start the classification process in a separate thread."""
+        self.run_button.setEnabled(False)  # Set the run button to be disabled
+        self.repaint()
+
+        self.job = ClassificationJob(self)
+        self.job.log_signal.connect(self.log_message)
+        self.job.start()
+
+    def closeEvent(self, event):
+        """Handle the dialog close event."""
+        if self.job and self.job.isRunning():
+            self.job.log_signal.disconnect(self.log_message)
+            self.job.terminate()
+            self.job.wait()
+        event.accept()
+        
+        # Close the logger
+        if self.logger is not None:
+            handlers = self.logger.handlers[:]
+            for handler in handlers:
+                handler.close()
+                self.logger.removeHandler(handler)
+            del self.logger # Delete the logger, segmentmytif made it global
+
+    def log_message(self, message):
+        """Log a message to the log window."""
+        self.log_window_handler.widget.appendPlainText(message)
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
@@ -408,8 +501,10 @@ def _sort_layers(layers):
     sorted_layers = active_layers + inactive_layers
     return sorted_layers
 
+
 class RadioButtonWithHelp(QtWidgets.QWidget):
     """A widget that contains a radio button and a help icon."""
+
     def __init__(self, text, help_text, parent=None):
         super().__init__(parent)
         layout = QtWidgets.QHBoxLayout(self)
@@ -422,3 +517,18 @@ class RadioButtonWithHelp(QtWidgets.QWidget):
         layout.setAlignment(QtCore.Qt.AlignLeft)
         self.setLayout(layout)
         self.setFixedHeight(LABEL_HEIGHT)
+
+
+class ClassificationJob(QThread):
+    log_signal = pyqtSignal(str)
+
+    def __init__(self, dialog):
+        super().__init__()
+        self.dialog = dialog
+        self.mutex = QMutex()
+
+    def run(self):
+        try:
+            self.dialog.run_classification()
+        except Exception as e:
+            self.log_signal.emit(f"Error: {str(e)}")

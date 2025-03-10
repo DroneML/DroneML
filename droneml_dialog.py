@@ -39,6 +39,9 @@ class DroneMLDialog(QtWidgets.QDialog):
         """Constructor."""
         super(DroneMLDialog, self).__init__(parent)
 
+        # Init a logger
+        self.logger = None
+
         # Set up the dialog window properties
         self.setWindowTitle("DroneML Plugin")
         self.resize(800, 700)
@@ -126,14 +129,14 @@ class DroneMLDialog(QtWidgets.QDialog):
         self._add_advanced_options()
 
         # Add run button
-        button_layout = QtWidgets.QHBoxLayout()
-        run_button = QtWidgets.QPushButton("run")
-        run_button.clicked.connect(self.start_classification)
-        run_button.setFixedSize(64, 32)
-        button_layout.addWidget(run_button)
+        self.button_layout = QtWidgets.QHBoxLayout()
+        self.run_button = QtWidgets.QPushButton("run")
+        self.run_button.clicked.connect(self.start_classification)
+        self.run_button.setFixedSize(64, 32)
+        self.button_layout.addWidget(self.run_button)
 
         # Add the button layout to the main layout
-        self.layout.addLayout(button_layout)
+        self.layout.addLayout(self.button_layout)
 
         # Add a separator
         self._add_separator()
@@ -424,6 +427,9 @@ class DroneMLDialog(QtWidgets.QDialog):
 
     def start_classification(self):
         """Start the classification process in a separate thread."""
+        self.run_button.setEnabled(False)  # Set the run button to be disabled
+        self.repaint()
+
         self.job = ClassificationJob(self)
         self.job.log_signal.connect(self.log_message)
         self.job.start()
@@ -436,7 +442,8 @@ class DroneMLDialog(QtWidgets.QDialog):
         event.accept()
         
         # Close the logger
-        del self.logger
+        if self.logger is not None:
+            del self.logger
 
     def log_message(self, message):
         """Log a message to the log window."""

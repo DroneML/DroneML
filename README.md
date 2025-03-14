@@ -11,7 +11,7 @@ In QGIS, go to `Plugins` > `Python Console`.
 Run the following Python code to install the dependencies required by the plugin:
 
 ```python
-!pip install -U segmentmytif
+import subprocess; import sys; subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "segmentmytif"])
 ```
 
 ### Step 2: Restart QGIS

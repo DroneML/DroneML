@@ -11,8 +11,9 @@ In QGIS, go to `Plugins` > `Python Console`.
 Run the following Python code to install the dependencies required by the plugin:
 
 ```python
-import subprocess; import sys; subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "segmentmytif"])
+!pip install -U segmentmytif
 ```
+Some configurations don't support shell execution (the '!' in the above command). In that case, see the trouble shooting section below.
 
 ### Step 2: Restart QGIS
 Restart QGIS for the installation of the dependencies (step 1) to take effect.
@@ -54,7 +55,17 @@ With the following input fields:
 
 - For large datasets, it is recommended to use the "Parallel" or "Safe" mode to avoid memory issues. You can configure the chunk size and overlap to optimize the performance. It is not recommended to set the chunk size too small, as it will increase the overhead.
 
-## Trouble shooting: Manual Installation if install from ZIP fails
+## Trouble shooting: 
+### !pip install not working
+Run the following to locate QGIS' python executable and use it to install the dependencies:
+```python
+import os; import sys; import subprocess; qgis_python_executable = os.path.join(os.path.dirname(sys.executable), "python3.exe"); subprocess.check_call([qgis_python_executable, "-m", "pip", "install", "-U", "segmentmytif"])
+```
+A console window should pop up, show some output and then close again. In QGIS you should see a '0' in the terminal, indicating that the command finished successfully.
+
+_Restart QGIS in order for the installation to take effect._
+
+### Manual Installation if install from ZIP fails
 
 Clone the `droneml` folder, which is needed for the segmentation part of the plugin.
 

@@ -56,6 +56,11 @@ With the following input fields:
 - For large datasets, it is recommended to use the "Parallel" or "Safe" mode to avoid memory issues. You can configure the chunk size and overlap to optimize the performance. It is not recommended to set the chunk size too small, as it will increase the overhead.
 
 ## Trouble shooting: 
+### Upgrade your QGIS to make sure your QGIS Python is >=3.10
+Please verify your QGIS Python version is equal or greater than 3.10 by going to "Help" > "About". You will encounter to errors if you are using an older version of Python.
+
+If you are using an older version of Python, please upgrade your QGIS to the latest version. We recommend using the long-term release (LTR) version of QGIS, please check [QGIS download page](https://qgis.org/download/).
+
 ### !pip install not working
 Run the following to locate QGIS' python executable and use it to install the dependencies:
 ```python

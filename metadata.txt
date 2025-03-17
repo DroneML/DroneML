@@ -6,4 +6,3 @@ version=0.1.1
 author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
 email=c.meijer@esciencecenter.nl
 category=Analysis
-plugin_dependencies=geopandas,rioxarray,scikit-learn,dask

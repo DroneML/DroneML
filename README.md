@@ -22,13 +22,13 @@ Restart QGIS for the installation of the dependencies (step 1) to take effect.
 
 Download the ZIP file of DroneML from [this link](https://raw.githubusercontent.com/DroneML/DroneML/release/DroneML.zip).
 
-Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file.
+Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `coeusai.zip` file.
 
 ## Getting Started
 
 The interface of DroneML plugin is as below:
 
-![droneml_ui_image](droneml_ui_image.png)
+![coeusai_ui_image](coeusai_ui_image.png)
 
 With the following input fields:
 
@@ -72,13 +72,13 @@ _Restart QGIS in order for the installation to take effect._
 
 ### Manual Installation if install from ZIP fails
 
-Clone the `droneml` folder, which is needed for the segmentation part of the plugin.
+Clone the `coeusai` folder, which is needed for the segmentation part of the plugin.
 
 ```bash
-git clone git@github.com:DroneML/droneml.git
+git clone git@github.com:DroneML/coeusai.git
 ```
 
-Copy the `droneml` folder to the QGIS plugins directory. Examples on different operating systems:
+Copy the `coeusai` folder to the QGIS plugins directory. Examples on different operating systems:
 
 - Windows: `C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\minimal`
 - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/minimal`

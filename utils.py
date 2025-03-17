@@ -46,7 +46,7 @@ class QgisLogHandler(logging.Handler):
 
     def emit(self, record):
         msg = self.format(record)
-        QgsMessageLog.logMessage(msg, "DroneML", Qgis.Info)
+        QgsMessageLog.logMessage(msg, "CoeusAI", Qgis.Info)
 
 class DialogLoggerHandler(logging.Handler):
     def __init__(self, parent):

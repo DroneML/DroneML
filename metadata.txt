@@ -1,5 +1,5 @@
 [general]
-name=DroneML
+name=CoeusAI
 qgisMinimumVersion=3.3
 description=This is a plugin for Drone Machine Learning study.
 version=0.1.1

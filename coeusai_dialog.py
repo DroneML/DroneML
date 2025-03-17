@@ -34,16 +34,16 @@ HELP_ICON_SIZE = 12  # Size of the help icon
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
 
-class DroneMLDialog(QtWidgets.QDialog):
+class CoeusAIDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor."""
-        super(DroneMLDialog, self).__init__(parent)
+        super(CoeusAIDialog, self).__init__(parent)
 
         # Init a logger
         self.logger = None
 
         # Set up the dialog window properties
-        self.setWindowTitle("DroneML Plugin")
+        self.setWindowTitle("CoeusAI Plugin")
         self.resize(800, 700)
 
         # Get Qgis Layers

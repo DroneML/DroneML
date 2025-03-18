@@ -3,7 +3,7 @@ from pathlib import Path
 import os
 import inspect
 from qgis.PyQt import QtWidgets, QtCore, QtGui
-from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
+from qgis.PyQt.QtCore import QThread
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
 from segmentmytif.main import read_input_and_labels_and_save_predictions
 from segmentmytif.features import FeatureType
@@ -20,7 +20,6 @@ from .utils import (
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
     QgisLogHandler,
-    DialogLoggerHandler,
 )
 
 # Constants
@@ -137,16 +136,6 @@ class CoeusAIDialog(QtWidgets.QDialog):
 
         # Add the button layout to the main layout
         self.layout.addLayout(self.button_layout)
-
-        # Add a separator
-        self._add_separator()
-
-        # Add log window
-        self.log_window_handler = DialogLoggerHandler(self)
-        self.log_window_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        )
-        self.layout.addWidget(self.log_window_handler.widget)
 
         # Set the layout to the dialog
         self.layout.setSpacing(5)
@@ -423,7 +412,6 @@ class CoeusAIDialog(QtWidgets.QDialog):
         logger.addHandler(qgis_handler)
         logger.addHandler(file_handler_info)
         logger.addHandler(file_handler_debug)
-        logger.addHandler(self.log_window_handler)
 
         return logger
 
@@ -433,13 +421,11 @@ class CoeusAIDialog(QtWidgets.QDialog):
         self.repaint()
 
         self.job = ClassificationJob(self)
-        self.job.log_signal.connect(self.log_message)
         self.job.start()
 
     def closeEvent(self, event):
         """Handle the dialog close event."""
         if self.job and self.job.isRunning():
-            self.job.log_signal.disconnect(self.log_message)
             self.job.terminate()
             self.job.wait()
         event.accept()
@@ -451,10 +437,6 @@ class CoeusAIDialog(QtWidgets.QDialog):
                 handler.close()
                 self.logger.removeHandler(handler)
             del self.logger # Delete the logger, segmentmytif made it global
-
-    def log_message(self, message):
-        """Log a message to the log window."""
-        self.log_window_handler.widget.appendPlainText(message)
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
@@ -520,12 +502,10 @@ class RadioButtonWithHelp(QtWidgets.QWidget):
 
 
 class ClassificationJob(QThread):
-    log_signal = pyqtSignal(str)
 
     def __init__(self, dialog):
         super().__init__()
         self.dialog = dialog
-        self.mutex = QMutex()
 
     def run(self):
         try:

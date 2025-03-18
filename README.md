@@ -1,3 +1,5 @@
+![icon](https://github.com/user-attachments/assets/94c71e29-6798-4102-a485-ffe6203a89e9)
+
 # CoeusAI
 
 QGIS plugin for drone image segmentation using machine learning.

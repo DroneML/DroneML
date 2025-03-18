@@ -1,6 +1,8 @@
-# DroneML
+![icon](https://github.com/user-attachments/assets/94c71e29-6798-4102-a485-ffe6203a89e9)
 
-QGIS plugin for drone image classification using machine learning.
+# CoeusAI
+
+QGIS plugin for drone image segmentation using machine learning.
 
 ## Installation
 
@@ -11,24 +13,24 @@ In QGIS, go to `Plugins` > `Python Console`.
 Run the following Python code to install the dependencies required by the plugin:
 
 ```python
-!pip install -U segmentmytif
+!pip install -U pycoeus
 ```
 Some configurations don't support shell execution (the '!' in the above command). In that case, see the trouble shooting section below.
 
 ### Step 2: Restart QGIS
 Restart QGIS for the installation of the dependencies (step 1) to take effect.
 
-### Step 3: Install DroneML plugin from ZIP
+### Step 3: Install CoeusAI plugin from ZIP
 
-Download the ZIP file of DroneML from [this link](https://raw.githubusercontent.com/DroneML/DroneML/release/DroneML.zip).
+Download the ZIP file of CoeusAI from [this link](https://raw.githubusercontent.com/DroneML/CoeusAI/release/CoeusAI.zip).
 
-Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `droneml.zip` file.
+Then, go to `Plugins` > `Manage and Install Plugins...` > `Install from ZIP` and select the downloaded `coeusai.zip` file.
 
 ## Getting Started
 
-The interface of DroneML plugin is as below:
+The interface of CoeusAI plugin is as below:
 
-![droneml_ui_image](droneml_ui_image.png)
+![coeusai_ui_image](coeusai_ui_image.png)
 
 With the following input fields:
 
@@ -49,17 +51,22 @@ With the following input fields:
   1. Use the [Build Virtual Raster](https://docs.qgis.org/3.34/en/docs/user_manual/processing_algs/gdal/rastermiscellaneous.html#build-virtual-raster) under the Processing plugin to merge the raster layers into one raster layer with multiple bands. 
   2. Then export the merged virtual raster layer as a GeoTIFF file.
   3. Reload the GeoTIFF file into QGIS
-  4. Ise the DroneML plugin to perform segmentation on the reloaded multi-band raster layer.
+  4. Use the CoeusAI plugin to perform segmentation on the reloaded multi-band raster layer.
 
 - Although the plugin supports ovewritting existing tif files with prediction, but if a tif file has already been loaded in QGIS, the ovewritting will fail. Therefore, if you want to overite a tif file, please remove it from the QGIS project first.
 
 - For large datasets, it is recommended to use the "Parallel" or "Safe" mode to avoid memory issues. You can configure the chunk size and overlap to optimize the performance. It is not recommended to set the chunk size too small, as it will increase the overhead.
 
 ## Trouble shooting: 
+### Upgrade your QGIS to make sure your QGIS Python is >=3.10
+Please verify your QGIS Python version is equal or greater than 3.10 by going to "Help" > "About". You will encounter to errors if you are using an older version of Python.
+
+If you are using an older version of Python, please upgrade your QGIS to the latest version. We recommend using the long-term release (LTR) version of QGIS, please check [QGIS download page](https://qgis.org/download/).
+
 ### !pip install not working
 Run the following to locate QGIS' python executable and use it to install the dependencies:
 ```python
-import os; import sys; import subprocess; qgis_python_executable = os.path.join(os.path.dirname(sys.executable), "python3.exe"); subprocess.check_call([qgis_python_executable, "-m", "pip", "install", "-U", "segmentmytif"])
+import os; import sys; import subprocess; qgis_python_executable = os.path.join(os.path.dirname(sys.executable), "python3.exe"); subprocess.check_call([qgis_python_executable, "-m", "pip", "install", "-U", "pycoeus"])
 ```
 A console window should pop up, show some output and then close again. In QGIS you should see a '0' in the terminal, indicating that the command finished successfully.
 
@@ -67,19 +74,19 @@ _Restart QGIS in order for the installation to take effect._
 
 ### Manual Installation if install from ZIP fails
 
-Clone the `droneml` folder, which is needed for the segmentation part of the plugin.
+Clone the `coeusai` folder, which is needed for the segmentation part of the plugin.
 
 ```bash
-git clone git@github.com:DroneML/droneml.git
+git clone git@github.com:DroneML/coeusai.git
 ```
 
-Copy the `droneml` folder to the QGIS plugins directory. Examples on different operating systems:
+Copy the `coeusai` folder to the QGIS plugins directory. Examples on different operating systems:
 
 - Windows: `C:\Users\USER\AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins\minimal`
 - Linux: `~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/minimal`
 - MacOS: `~/Library/Application Support/QGIS/QGIS3/profiles/default/python/plugins/minimal`
 
-Then go to `Plugins` > `Manage and Install Plugins...`, check the box next to `DroneML`. The plugin should now be available in the QGIS interface.
+Then go to `Plugins` > `Manage and Install Plugins...`, check the box next to `CoeusAI`. The plugin should now be available in the QGIS interface.
 
 ## Acknowledgements
-Icon image generated by [Flaticon](https://www.flaticon.com/).
+Icon image generated by [DALL·E](https://openai.com/index/dall-e-3/).

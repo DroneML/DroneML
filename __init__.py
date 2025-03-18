@@ -1,4 +1,4 @@
-from .droneml import DroneMLPlugin
+from .coeusai import CoeusAIPlugin
 
 def classFactory(iface):
-    return DroneMLPlugin(iface)
+    return CoeusAIPlugin(iface)

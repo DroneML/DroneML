@@ -3,10 +3,10 @@ from pathlib import Path
 import os
 import inspect
 from qgis.PyQt import QtWidgets, QtCore, QtGui
-from qgis.PyQt.QtCore import QThread, pyqtSignal, QMutex
+from qgis.PyQt.QtCore import QThread
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
-from segmentmytif.main import read_input_and_labels_and_save_predictions
-from segmentmytif.features import FeatureType
+from pycoeus.main import read_input_and_labels_and_save_predictions
+from pycoeus.features import FeatureType
 from .utils import (
     HTEXT_OUTPUT_PATH,
     HTEXT_INPUT_RSASTER,
@@ -20,7 +20,6 @@ from .utils import (
     HTEXT_CHUNK_SIZE,
     HTEXT_OVERLAP_SIZE,
     QgisLogHandler,
-    DialogLoggerHandler,
 )
 
 # Constants
@@ -34,16 +33,16 @@ HELP_ICON_SIZE = 12  # Size of the help icon
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
 
-class DroneMLDialog(QtWidgets.QDialog):
+class CoeusAIDialog(QtWidgets.QDialog):
     def __init__(self, parent=None):
         """Constructor."""
-        super(DroneMLDialog, self).__init__(parent)
+        super(CoeusAIDialog, self).__init__(parent)
 
         # Init a logger
         self.logger = None
 
         # Set up the dialog window properties
-        self.setWindowTitle("DroneML Plugin")
+        self.setWindowTitle("CoeusAI Plugin")
         self.resize(800, 700)
 
         # Get Qgis Layers
@@ -129,6 +128,7 @@ class DroneMLDialog(QtWidgets.QDialog):
         self._add_advanced_options()
 
         # Add run button
+       
         self.button_layout = QtWidgets.QHBoxLayout()
         self.run_button = QtWidgets.QPushButton("run")
         self.run_button.clicked.connect(self.start_classification)
@@ -138,15 +138,13 @@ class DroneMLDialog(QtWidgets.QDialog):
         # Add the button layout to the main layout
         self.layout.addLayout(self.button_layout)
 
-        # Add a separator
-        self._add_separator()
-
-        # Add log window
-        self.log_window_handler = DialogLoggerHandler(self)
-        self.log_window_handler.setFormatter(
-            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-        )
-        self.layout.addWidget(self.log_window_handler.widget)
+        # Add help text for the run button
+        text_runbutton = "Hint: Check View -> Panels -> Log Messages for the classification progress."
+        label_runbutton = QtWidgets.QLabel(text_runbutton)
+        label_runbutton.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label_runbutton.setFixedHeight(LABEL_HEIGHT)
+        label_runbutton.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout.addWidget(label_runbutton)
 
         # Set the layout to the dialog
         self.layout.setSpacing(5)
@@ -423,7 +421,6 @@ class DroneMLDialog(QtWidgets.QDialog):
         logger.addHandler(qgis_handler)
         logger.addHandler(file_handler_info)
         logger.addHandler(file_handler_debug)
-        logger.addHandler(self.log_window_handler)
 
         return logger
 
@@ -433,13 +430,11 @@ class DroneMLDialog(QtWidgets.QDialog):
         self.repaint()
 
         self.job = ClassificationJob(self)
-        self.job.log_signal.connect(self.log_message)
         self.job.start()
 
     def closeEvent(self, event):
         """Handle the dialog close event."""
         if self.job and self.job.isRunning():
-            self.job.log_signal.disconnect(self.log_message)
             self.job.terminate()
             self.job.wait()
         event.accept()
@@ -450,11 +445,7 @@ class DroneMLDialog(QtWidgets.QDialog):
             for handler in handlers:
                 handler.close()
                 self.logger.removeHandler(handler)
-            del self.logger # Delete the logger, segmentmytif made it global
-
-    def log_message(self, message):
-        """Log a message to the log window."""
-        self.log_window_handler.widget.appendPlainText(message)
+            del self.logger # Delete the logger, pycoeus made it global
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""
@@ -520,15 +511,13 @@ class RadioButtonWithHelp(QtWidgets.QWidget):
 
 
 class ClassificationJob(QThread):
-    log_signal = pyqtSignal(str)
 
     def __init__(self, dialog):
         super().__init__()
         self.dialog = dialog
-        self.mutex = QMutex()
 
     def run(self):
         try:
             self.dialog.run_classification()
         except Exception as e:
-            self.log_signal.emit(f"Error: {str(e)}")
+           self.dialog.logger.error(f"Error: {str(e)}")

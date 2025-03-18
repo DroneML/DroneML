@@ -1,6 +1,6 @@
 import os
 import inspect
-from .droneml_dialog import DroneMLDialog
+from .coeusai_dialog import CoeusAIDialog
 from PyQt5.QtWidgets import QAction
 from PyQt5.QtGui import QIcon
 
@@ -8,13 +8,13 @@ from PyQt5.QtGui import QIcon
 cmd_folder = os.path.split(inspect.getfile(inspect.currentframe()))[0]
 
 
-class DroneMLPlugin:
+class CoeusAIPlugin:
     def __init__(self, iface):
         self.iface = iface
 
     def initGui(self):
         icon = os.path.join(os.path.join(cmd_folder, "icon.png"))
-        self.action = QAction(QIcon(icon), "DroneML", self.iface.mainWindow())
+        self.action = QAction(QIcon(icon), "CoeusAI", self.iface.mainWindow())
         self.iface.addToolBarIcon(self.action)
         self.action.triggered.connect(self.run)
 
@@ -24,7 +24,7 @@ class DroneMLPlugin:
 
     def run(self):
         # Instantiate the dialog
-        self.dlg = DroneMLDialog()
+        self.dlg = CoeusAIDialog()
 
         # Show the dialog
         self.dlg.show()

@@ -5,8 +5,8 @@ import inspect
 from qgis.PyQt import QtWidgets, QtCore, QtGui
 from qgis.PyQt.QtCore import QThread
 from qgis.core import QgsRasterLayer, QgsVectorLayer, QgsProject
-from segmentmytif.main import read_input_and_labels_and_save_predictions
-from segmentmytif.features import FeatureType
+from pycoeus.main import read_input_and_labels_and_save_predictions
+from pycoeus.features import FeatureType
 from .utils import (
     HTEXT_OUTPUT_PATH,
     HTEXT_INPUT_RSASTER,
@@ -436,7 +436,7 @@ class CoeusAIDialog(QtWidgets.QDialog):
             for handler in handlers:
                 handler.close()
                 self.logger.removeHandler(handler)
-            del self.logger # Delete the logger, segmentmytif made it global
+            del self.logger # Delete the logger, pycoeus made it global
 
     def _populate_raster_combo(self, combo_box):
         """Populate the raster combo box with the loaded raster layers."""

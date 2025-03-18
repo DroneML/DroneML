@@ -1,8 +1,8 @@
 [general]
 name=CoeusAI
 qgisMinimumVersion=3.3
-description=This is a plugin for Drone Machine Learning study.
-version=0.1.1
+description=QGIS plugin for image segmentation using machine learning.
+version=0.2.0
 author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
 email=c.meijer@esciencecenter.nl
 category=Analysis

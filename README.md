@@ -1,6 +1,6 @@
 # CoeusAI
 
-QGIS plugin for drone image classification using machine learning.
+QGIS plugin for drone image segmentation using machine learning.
 
 ## Installation
 
@@ -11,7 +11,7 @@ In QGIS, go to `Plugins` > `Python Console`.
 Run the following Python code to install the dependencies required by the plugin:
 
 ```python
-!pip install -U segmentmytif
+!pip install -U pycoeus
 ```
 Some configurations don't support shell execution (the '!' in the above command). In that case, see the trouble shooting section below.
 
@@ -64,7 +64,7 @@ If you are using an older version of Python, please upgrade your QGIS to the lat
 ### !pip install not working
 Run the following to locate QGIS' python executable and use it to install the dependencies:
 ```python
-import os; import sys; import subprocess; qgis_python_executable = os.path.join(os.path.dirname(sys.executable), "python3.exe"); subprocess.check_call([qgis_python_executable, "-m", "pip", "install", "-U", "segmentmytif"])
+import os; import sys; import subprocess; qgis_python_executable = os.path.join(os.path.dirname(sys.executable), "python3.exe"); subprocess.check_call([qgis_python_executable, "-m", "pip", "install", "-U", "pycoeus"])
 ```
 A console window should pop up, show some output and then close again. In QGIS you should see a '0' in the terminal, indicating that the command finished successfully.
 

@@ -511,4 +511,4 @@ class ClassificationJob(QThread):
         try:
             self.dialog.run_classification()
         except Exception as e:
-            self.log_signal.emit(f"Error: {str(e)}")
+           self.logger.error(f"Error: {str(e)}")

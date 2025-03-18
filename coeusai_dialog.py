@@ -128,6 +128,7 @@ class CoeusAIDialog(QtWidgets.QDialog):
         self._add_advanced_options()
 
         # Add run button
+       
         self.button_layout = QtWidgets.QHBoxLayout()
         self.run_button = QtWidgets.QPushButton("run")
         self.run_button.clicked.connect(self.start_classification)
@@ -136,6 +137,14 @@ class CoeusAIDialog(QtWidgets.QDialog):
 
         # Add the button layout to the main layout
         self.layout.addLayout(self.button_layout)
+
+        # Add help text for the run button
+        text_runbutton = "Hint: Check View -> Panels -> Log Messages for the classification progress."
+        label_runbutton = QtWidgets.QLabel(text_runbutton)
+        label_runbutton.setStyleSheet(f"font-size: {FONTSIZE}px;")
+        label_runbutton.setFixedHeight(LABEL_HEIGHT)
+        label_runbutton.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout.addWidget(label_runbutton)
 
         # Set the layout to the dialog
         self.layout.setSpacing(5)
@@ -511,4 +520,4 @@ class ClassificationJob(QThread):
         try:
             self.dialog.run_classification()
         except Exception as e:
-           self.logger.error(f"Error: {str(e)}")
+           self.dialog.logger.error(f"Error: {str(e)}")

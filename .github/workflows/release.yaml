@@ -19,5 +19,5 @@ jobs:
 
       - name: Deploy plugin
         run: |
-          RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
-          qgis-plugin-ci release ${RELEASE_TAG} --github-token ${{ secrets.GITHUB_TOKEN }} --osgeo-username ${{ secrets.OSGEO_USER }} --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
+          # RELEASE_TAG=$(curl -s https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r '.tag_name')
+          qgis-plugin-ci release "0.2.3" --github-token ${{ secrets.GITHUB_TOKEN }} --osgeo-username ${{ secrets.OSGEO_USER }} --osgeo-password ${{ secrets.OSGEO_PASSWORD }}

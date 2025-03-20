@@ -1,6 +1,4 @@
 on:
-  pull_request:
-    branches: main
   release:
     types: published
 
@@ -22,7 +20,7 @@ jobs:
       - name: Deploy plugin
         run: >-
           qgis-plugin-ci
-          release v0.2.2
+          release ${GITHUB_REF/refs\/tags\//}
           --github-token ${{ secrets.GITHUB_TOKEN }}
           --osgeo-username ${{ secrets.OSGEO_USER }}
           --osgeo-password ${{ secrets.OSGEO_PASSWORD }}

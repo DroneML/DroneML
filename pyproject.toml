@@ -7,9 +7,9 @@ license = {file = "LICENSE"}
 name = "pycoeus"
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.10"
-version = "v0.2.3"
+version = "0.2.3"
 
 [tool.qgis-plugin-ci]
-plugin_path = slugify(plugin_name)
+plugin_path = "."
 github_organization_slug = "DroneML"
 project_slug = "CoeusAI"

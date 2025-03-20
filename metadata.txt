@@ -6,3 +6,5 @@ version=0.2.2
 author=Maurice de Kleijn, Christiaan Meijer, Ou Ku
 email=c.meijer@esciencecenter.nl
 category=Analysis
+tracker=https://github.com/DroneML/CoeusAI/issues
+repository=https://github.com/DroneML/CoeusAI/

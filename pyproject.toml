@@ -1,0 +1,15 @@
+[project]
+dependencies = [
+    "pycoeus",
+]
+description = "QGIS plugin for image segmentation using machine learning."
+license = {file = "LICENSE"}
+name = "pycoeus"
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.10"
+version = "0.2.3"
+
+[tool.qgis-plugin-ci]
+plugin_path = "."
+github_organization_slug = "DroneML"
+project_slug = "CoeusAI"

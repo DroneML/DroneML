@@ -10,5 +10,6 @@ requires-python = ">=3.10"
 version = "v0.2.3"
 
 [tool.qgis-plugin-ci]
+plugin_path = slugify(plugin_name)
 github_organization_slug = "DroneML"
 project_slug = "CoeusAI"

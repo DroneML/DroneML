@@ -10,6 +10,6 @@ requires-python = ">=3.10"
 version = "0.2.2"
 
 [tool.qgis-plugin-ci]
-plugin_path = "CoeusAI"
+plugin_path = "."
 github_organization_slug = "DroneML"
 project_slug = "CoeusAI"

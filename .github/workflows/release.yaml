@@ -16,19 +16,13 @@ jobs:
         with:
           python-version: "3.10"
 
-       # Needed if the plugin is using Transifex, to have the lrelease command
-       # - name: Install Qt lrelease
-       #   run: |
-       #    sudo apt-get update
-       #    sudo apt-get install qt5-make qttools5-dev-tools
-
       - name: Install qgis-plugin-ci
         run: pip3 install qgis-plugin-ci
 
       - name: Deploy plugin
         run: >-
           qgis-plugin-ci
-          release ${GITHUB_REF/refs\/tags\//}
+          release v0.2.2
           --github-token ${{ secrets.GITHUB_TOKEN }}
           --osgeo-username ${{ secrets.OSGEO_USER }}
           --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
